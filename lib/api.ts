@@ -52,13 +52,34 @@ api.interceptors.response.use(
     }
 
     // Extract error message from backend response
-    // Check for 'details' first (plural), then 'detail' (singular), then other fields
-    const backendMsg =
-      error.response?.data?.details ||
-      error.response?.data?.detail ||
-      error.response?.data?.error ||
-      error.response?.data?.message ||
-      (typeof error.response?.data === "string" ? error.response.data : "Une erreur est survenue. Veuillez réessayer.")
+    const data = error.response?.data
+    let backendMsg = ""
+
+    if (data) {
+      if (typeof data === "string") {
+        backendMsg = data
+      } else if (typeof data === "object") {
+        // Check for standard error keys
+        backendMsg = data.details || data.detail || data.error || data.message
+
+        // Handle field-specific errors like {"email": ["User already exists"]}
+        if (!backendMsg) {
+          const values = Object.values(data)
+          if (values.length > 0) {
+            const firstVal = values[0]
+            if (Array.isArray(firstVal) && firstVal.length > 0) {
+              backendMsg = firstVal[0]
+            } else if (typeof firstVal === "string") {
+              backendMsg = firstVal
+            }
+          }
+        }
+      }
+    }
+
+    if (!backendMsg) {
+      backendMsg = "Une erreur est survenue. Veuillez réessayer."
+    }
 
     return Promise.reject({ message: backendMsg, originalError: error })
   },
