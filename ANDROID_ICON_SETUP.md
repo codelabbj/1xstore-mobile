@@ -1,22 +1,22 @@
 # Android App Icon Setup Guide
 
-This guide will help you set up the Turaincash logo as the Android app icon.
+This guide will help you set up the 1xstore logo as the Android app icon.
 
 ## Quick Method: Using Online Tools
 
 ### Option 1: Android Asset Studio (Recommended)
 1. Go to: https://romannurik.github.io/AndroidAssetStudio/icons-launcher.html
-2. Upload your logo: `public/Turaincash-logo.png`
+2. Upload your logo: `public/1xstore-logo.png`
 3. Configure:
-   - **Foreground**: Upload `Turaincash-logo.png`
-   - **Background**: Set to `#00FFFF` (cyan) or use a solid color
+   - **Foreground**: Upload `1xstore-logo.png`
+   - **Background**: Set to `#7C3AED` (purple) or use a solid color
    - **Padding**: Adjust as needed (recommended: 20%)
 4. Click "Download" to get a ZIP file
 5. Extract the ZIP and copy the `res` folder contents to `android/app/src/main/res/`
 
 ### Option 2: Icon Kitchen
 1. Go to: https://icon.kitchen/
-2. Upload `public/Turaincash-logo.png`
+2. Upload `public/1xstore-logo.png`
 3. Select "Android" platform
 4. Download and extract
 5. Copy the generated `res` folder contents to `android/app/src/main/res/`
@@ -28,10 +28,10 @@ This guide will help you set up the Turaincash logo as the Android app icon.
 3. Select "Launcher Icons (Adaptive and Legacy)"
 4. Configure:
    - **Foreground Layer**: 
-     - Path: Select `public/Turaincash-logo.png`
+     - Path: Select `public/1xstore-logo.png`
      - Scaling: Adjust to fit (recommended: 80-90%)
    - **Background Layer**:
-     - Color: `#00FFFF` (cyan)
+    - Color: `#7C3AED` (purple)
 5. Click "Next" and "Finish"
 6. The icons will be automatically generated in the correct folders
 
@@ -76,7 +76,7 @@ For adaptive icons (Android 8.0+):
 
 ## Notes
 
-- The background color has been set to cyan (#00FFFF) to match your app theme
+- The background color has been set to purple (#7C3AED) to match your app theme
 - Adaptive icons require both foreground and background layers
 - Make sure the logo is centered and has appropriate padding
 - The logo should be on a transparent background for best results

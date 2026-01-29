@@ -4,18 +4,36 @@ import { useState, useEffect, MouseEvent } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, Plus, Pencil, Trash } from "lucide-react"
+import {
+  ArrowLeft,
+  Check,
+  Plus,
+  Pencil,
+  Trash,
+  Globe,
+  IdCard,
+  Network as NetworkIcon,
+  Smartphone,
+  Coins,
+  Sparkles,
+  PhoneCall,
+  HelpCircle,
+  type LucideIcon,
+} from "lucide-react"
 import toast from "react-hot-toast"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AuthGuard } from "@/components/auth-guard"
+import { AppShell } from "@/app/_components/AppShell"
+import { AppSection } from "@/app/_components/AppSection"
+import { Badge } from "@/components/ui/badge"
 import api from "@/lib/api"
-import type { Platform, Network, UserPhone, UserAppId } from "@/lib/types"
+import type { Platform, Network as NetworkType, UserPhone, UserAppId } from "@/lib/types"
 import { useSettings } from "@/hooks/use-settings"
+import { cn } from "@/lib/utils"
 
 const COUNTRY_OPTIONS = [
   { code: "CI", name: "Côte d'Ivoire", indication: "225" },
@@ -25,6 +43,70 @@ const COUNTRY_OPTIONS = [
 ] as const
 
 const DEFAULT_COUNTRY_CODE = "CI"
+
+type StepDefinition = {
+  id: number
+  label: string
+  icon: LucideIcon
+}
+
+const DEPOSIT_STEPS: StepDefinition[] = [
+  { id: 1, label: "Plateforme", icon: Globe },
+  { id: 2, label: "ID Pari", icon: IdCard },
+  { id: 3, label: "Réseau", icon: NetworkIcon },
+  { id: 4, label: "Téléphone", icon: Smartphone },
+  { id: 5, label: "Montant", icon: Coins },
+]
+
+const STEP_STATUS: Record<number, string> = {
+  1: "Choisissez votre plateforme",
+  2: "Validez l'identifiant de pari",
+  3: "Sélectionnez le réseau mobile money",
+  4: "Confirmez le numéro débité",
+  5: "Renseignez le montant et vérifiez le récapitulatif",
+}
+
+const StepProgress = ({ activeStep, steps }: { activeStep: number; steps: StepDefinition[] }) => (
+  <div className="space-y-3">
+    <div className="flex items-center justify-between">
+      {steps.map((step, index) => {
+        const Icon = step.icon
+        const isCurrent = activeStep === step.id
+        const isCompleted = activeStep > step.id
+        return (
+          <div key={step.id} className="flex items-center flex-1">
+            <div className="flex flex-col items-center gap-1.5">
+              <div
+                className={cn(
+                  "h-10 w-10 rounded-full flex items-center justify-center transition-all",
+                  isCompleted
+                    ? "bg-primary text-white"
+                    : isCurrent
+                      ? "bg-primary/20 text-primary border-2 border-primary"
+                      : "bg-muted text-muted-foreground",
+                )}
+              >
+                {isCompleted ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+              </div>
+              <span className={cn(
+                "text-[10px] font-medium",
+                isCurrent || isCompleted ? "text-foreground" : "text-muted-foreground"
+              )}>
+                {step.label}
+              </span>
+            </div>
+            {index < steps.length - 1 && (
+              <div className={cn(
+                "h-0.5 flex-1 mx-1 transition-colors",
+                isCompleted ? "bg-primary" : "bg-muted"
+              )} />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  </div>
+)
 
 function DepositContent() {
   const { t } = useTranslation()
@@ -58,7 +140,7 @@ function DepositContent() {
   const [step, setStep] = useState(1)
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null)
   const [selectedBetId, setSelectedBetId] = useState<UserAppId | null>(null)
-  const [selectedNetwork, setSelectedNetwork] = useState<Network | null>(null)
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkType | null>(null)
   const [selectedPhone, setSelectedPhone] = useState<UserPhone | null>(null)
   const [amount, setAmount] = useState("")
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -121,7 +203,7 @@ function DepositContent() {
   const { data: networks, isLoading: loadingNetworks } = useQuery({
     queryKey: ["networks"],
     queryFn: async () => {
-      const response = await api.get<Network[]>("/mobcash/network")
+      const response = await api.get<NetworkType[]>("/mobcash/network")
       return response.data.filter((n) => n.active_for_deposit)
     },
     enabled: !!selectedPlatform,
@@ -167,6 +249,14 @@ function DepositContent() {
     }
     return digits
   }
+
+  const selectionTileClass = (isActive: boolean) =>
+    cn(
+      "relative overflow-hidden rounded-2xl border p-4 cursor-pointer transition-all mobile-pressable backdrop-blur",
+      isActive
+        ? "border-primary/70 bg-primary/10 shadow-[0_15px_50px_rgba(63,169,255,0.25)]"
+        : "border-border bg-white/80 hover:border-primary/40 dark:border-white/10 dark:bg-white/5",
+    )
 
   const resetBetEditDialog = () => {
     setBetEditDialogOpen(false)
@@ -481,7 +571,7 @@ function DepositContent() {
         network: selectedNetwork!.id,
         source: "web",
       }
-      
+
       // Add city and street if available from platform
       if (selectedPlatform!.city) {
         payload.city = selectedPlatform!.city
@@ -489,40 +579,90 @@ function DepositContent() {
       if (selectedPlatform!.street) {
         payload.street = selectedPlatform!.street
       }
-      
+
       const response = await api.post("/mobcash/transaction-deposit", payload)
       return response.data
     },
     onSuccess: (data) => {
       toast.success("Dépôt créé avec succès! En attente de confirmation.")
-      
-      // Check if MOOV network and redirect to phone dial
+
       const networkName = selectedNetwork?.name?.toLowerCase() || ""
       const networkPublicName = selectedNetwork?.public_name?.toLowerCase() || ""
       const isMoovNetwork = networkName.includes("moov") || networkPublicName.includes("moov")
-      
-      console.log("MOOV Check:", {
+      const isOrangeNetwork = networkName.includes("orange") || networkPublicName.includes("orange")
+      const hasConnectDepositApi = selectedNetwork?.deposit_api === "connect"
+
+      // Determine country code from selected phone number
+      const selectedPhoneCountry = detectCountryFromPhone(selectedPhone!.phone)
+      const isBurkinaFaso = selectedPhoneCountry === "BF"
+
+      // Get appropriate merchant phone numbers based on network and country
+      let moovMerchantPhone = settings?.moov_marchand_phone
+      let orangeMerchantPhone = settings?.orange_marchand_phone
+
+      if (isBurkinaFaso) {
+        moovMerchantPhone = settings?.bf_moov_marchand_phone || moovMerchantPhone
+        orangeMerchantPhone = settings?.bf_orange_marchand_phone || orangeMerchantPhone
+      }
+
+      console.log("Network Check:", {
         networkName,
         networkPublicName,
         isMoovNetwork,
-        hasSettings: !!settings,
-        moovMerchantPhone: settings?.moov_marchand_phone,
+        isOrangeNetwork,
+        depositApi: selectedNetwork?.deposit_api,
+        hasConnectDepositApi,
+        selectedPhoneCountry,
+        isBurkinaFaso,
+        moovMerchantPhone,
+        orangeMerchantPhone,
+        paymentByLink: settings?.payment_by_link,
+        transactionLink: data?.transaction_link,
       })
-      
-      if (isMoovNetwork && settings?.moov_marchand_phone) {
+
+      // Handle Orange network
+      if (isOrangeNetwork && hasConnectDepositApi) {
+        if (settings?.payment_by_link && data?.transaction_link) {
+          // Payment by link is enabled and transaction link exists - show modal
+          setTransactionLink(data.transaction_link)
+          setShowTransactionLinkDialog(true)
+          return
+        } else if (orangeMerchantPhone) {
+          // Payment by link is disabled or no transaction link - use USSD
+          const transactionAmount = Number(amount)
+          const ussdCode = `*144*2*1*${orangeMerchantPhone}*${transactionAmount}#`
+          const encodedUssd = ussdCode.replace(/#/g, "%23")
+          const telLink = `tel:${encodedUssd}`
+
+          console.log("Opening Orange USSD code:", ussdCode, "Tel link:", telLink)
+          setMoovUssdCode(ussdCode) // Reuse the existing state variable
+          setShowMoovUssdDialog(true) // Reuse the existing dialog
+
+          setTimeout(() => {
+            const link = document.createElement("a")
+            link.href = telLink
+            link.style.display = "none"
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+          }, 500)
+          return
+        }
+      }
+
+      // Handle Moov network
+      if (isMoovNetwork && hasConnectDepositApi && moovMerchantPhone) {
         const transactionAmount = Number(amount)
         const amountMinusOnePercent = Math.floor(transactionAmount * 0.99)
-        const ussdCode = `*155*2*1*${settings.moov_marchand_phone}*${amountMinusOnePercent}#`
+        const ussdCode = `*155*2*1*${moovMerchantPhone}*${amountMinusOnePercent}#`
         const encodedUssd = ussdCode.replace(/#/g, "%23")
         const telLink = `tel:${encodedUssd}`
-        
-        console.log("Opening USSD code:", ussdCode, "Tel link:", telLink)
+
+        console.log("Opening Moov USSD code:", ussdCode, "Tel link:", telLink)
         setMoovUssdCode(ussdCode)
         setShowMoovUssdDialog(true)
-        
-        // Use setTimeout to ensure settings are available and allow toast to show
+
         setTimeout(() => {
-          // Try using anchor element click which works better on some mobile browsers
           const link = document.createElement("a")
           link.href = telLink
           link.style.display = "none"
@@ -532,8 +672,8 @@ function DepositContent() {
         }, 500)
         return
       }
-      
-      // Check if transaction_link exists in the response
+
+      // Check if transaction_link exists in the response (fallback for other cases)
       if (data?.transaction_link) {
         setTransactionLink(data.transaction_link)
         setShowTransactionLinkDialog(true)
@@ -614,45 +754,121 @@ function DepositContent() {
     }
   }
 
+  const shellStatus = STEP_STATUS[step] || "Dépôt guidé"
+
+  const summaryChips = [
+    { label: "Plateforme", value: selectedPlatform?.name || "En attente", filled: !!selectedPlatform },
+    { label: "ID Pari", value: selectedBetId?.user_app_id || "À sélectionner", filled: !!selectedBetId },
+    { label: "Réseau", value: selectedNetwork?.public_name || "—", filled: !!selectedNetwork },
+    { label: "Téléphone", value: selectedPhone?.phone || "—", filled: !!selectedPhone },
+    { label: "Montant", value: amount ? `${Number(amount).toLocaleString()} FCFA` : "—", filled: !!amount },
+  ]
+
+  const handleBackNavigation = () => {
+    if (step > 1) {
+      setStep(step - 1)
+      return
+    }
+    router.push("/dashboard")
+  }
+
+  const headerActions = (
+    <div className="flex items-center gap-2">
+          <button
+        className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/10 bg-white/80 text-foreground shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl dark:border-white/10 dark:bg-white/10"
+        onClick={handleBackNavigation}
+        aria-label="Retour"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+      <Badge variant="secondary" className="rounded-2xl border border-primary/10 bg-primary/5 text-primary">
+        Étape {step}/{DEPOSIT_STEPS.length}
+      </Badge>
+          </div>
+  )
+
+  const floatingControls = (
+    <div className="flex items-center gap-2 rounded-2xl bg-white/95 px-4 py-3 shadow-2xl shadow-primary/20 backdrop-blur dark:bg-slate-900/80">
+      {step > 1 && (
+        <Button variant="outline" className="flex-1" onClick={() => setStep(step - 1)}>
+          {t("previous")}
+        </Button>
+      )}
+      <Button className="flex-1" onClick={handleNext}>
+        {step === 5 ? t("confirm") : t("next")}
+      </Button>
+        </div>
+  )
+
+  const helperShortcuts = [
+    {
+      title: "Associer un identifiant de pari",
+      description: "Lien direct vers l'ajout d'ID vérifié",
+      icon: IdCard,
+      action: () => router.push(`/add-bet-id?flow=deposit&return=/deposit&targetStep=${step}`),
+    },
+    {
+      title: "Ajouter un numéro mobile",
+      description: "Préparez vos retraits en enregistrant un numéro",
+      icon: Smartphone,
+      action: () => router.push(`/add-phone?flow=deposit&return=/deposit&targetStep=${step}`),
+    },
+    {
+      title: "Contacter le support",
+      description: "WhatsApp dédié en cas de blocage",
+      icon: PhoneCall,
+      action: () => window.open("https://wa.me/message/2290000000", "_blank"),
+    },
+  ]
+
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Mobile Header */}
-      <header className="bg-background border-b sticky top-0 z-50 safe-area-top">
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-3 mb-2">
-            <Button variant="ghost" size="icon" className="h-10 w-10" onClick={() => (step > 1 ? setStep(step - 1) : router.push("/dashboard"))}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex-1">
-              <h1 className="text-lg font-bold">{t("deposit")}</h1>
-              <p className="text-sm text-muted-foreground">Étape {step} sur 5</p>
+    <>
+      <AppShell
+        title="Dépôt guidé"
+        subtitle={`Étape ${step} sur ${DEPOSIT_STEPS.length}`}
+        status={shellStatus}
+        actions={headerActions}
+        floatingSlot={floatingControls}
+      >
+        <div className="space-y-6">
+          {/* <AppSection
+            variant="highlight"
+            title="Votre progression"
+            subtitle="Chaque étape sécurise votre transaction"
+            badge={
+              <Badge className="gap-2 bg-white/20 text-white">
+                <Coins className="h-3.5 w-3.5" />
+                Mode Dépôt
+              </Badge>
+            }
+          >
+            <div className="space-y-5">
+              <StepProgress activeStep={step} steps={DEPOSIT_STEPS} />
+              <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
+                {summaryChips.map((chip) => (
+                  <div
+                    key={chip.label}
+                    className="rounded-2xl border border-white/40 bg-white/40 px-4 py-3 backdrop-blur dark:border-white/10 dark:bg-white/10"
+                  >
+                    <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">{chip.label}</p>
+                    <p className={cn("text-base font-semibold", chip.filled ? "text-foreground" : "text-muted-foreground")}>
+                      {chip.value}
+                    </p>
+            </div>
+                ))}
             </div>
           </div>
-          
-          {/* Progress Bar */}
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary transition-all duration-300"
-              style={{ width: `${(step / 5) * 100}%` }}
-            />
-          </div>
-        </div>
-      </header>
+          </AppSection> */}
 
-
-      <main className="px-4 py-4 space-y-4">
-        {/* Step 1: Select Platform */}
         {step === 1 && (
-          <Card className="shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">{t("selectPlatform")}</CardTitle>
-              <CardDescription className="text-sm">Choisissez votre plateforme de paris</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
+            <AppSection
+              title="1. Choisissez la plateforme"
+              subtitle="Sélectionnez le bookmaker sur lequel vous souhaitez déposer."
+            >
               {loadingPlatforms ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-2"></div>
-                  <p className="text-sm">{t("loading")}</p>
+                <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-primary/30 bg-white/70 py-10 text-sm text-muted-foreground dark:bg-slate-900/40">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-3 border-primary border-r-transparent" />
+                  Chargement des plateformes...
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
@@ -661,61 +877,49 @@ function DepositContent() {
                       key={platform.id}
                       onClick={() => {
                         setSelectedPlatform(platform)
-                        setTimeout(() => setStep(2), 100)
+                        setTimeout(() => setStep(2), 120)
                       }}
-                      className={`relative p-3 rounded-lg border-2 cursor-pointer transition-all active:scale-95 ${
-                        selectedPlatform?.id === platform.id
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/50"
-                      }`}
+                      className={selectionTileClass(selectedPlatform?.id === platform.id)}
                     >
                       {selectedPlatform?.id === platform.id && (
-                        <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
-                          <Check className="h-3 w-3 text-white" />
+                        <div className="absolute top-3 right-3 rounded-full bg-primary p-1.5 text-white shadow-lg">
+                          <Check className="h-3.5 w-3.5" />
                         </div>
                       )}
                       <img
                         src={platform.image || "/placeholder.svg"}
                         alt={platform.name}
-                        className="w-full h-12 object-contain mb-2"
+                        className="mb-3 h-14 w-full object-contain"
                       />
-                      <p className="text-center text-sm font-medium">{platform.name}</p>
-                      <p className="text-center text-xs text-muted-foreground mt-1">
+                      <p className="text-center text-sm font-semibold">{platform.name}</p>
+                      <p className="mt-1 text-center text-xs text-muted-foreground">
                         {platform.minimun_deposit.toLocaleString()} - {platform.max_deposit.toLocaleString()} FCFA
                       </p>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </AppSection>
         )}
 
-        {/* Step 2: Select Bet ID */}
         {step === 2 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("selectBetId")}</CardTitle>
-              <CardDescription>Choisissez votre identifiant de pari</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <AppSection
+              title="2. Identifiant de pari"
+              subtitle="Choisissez un identifiant vérifié ou ajoutez-en un nouveau."
+            >
               {loadingBetIds ? (
-                <div className="text-center py-8">{t("loading")}</div>
+                <div className="py-8 text-center text-muted-foreground">{t("loading")}</div>
               ) : (
-                <>
+                <div className="space-y-4">
                   <div className="space-y-2">
                     {betIds?.map((betId) => (
                       <div
                         key={betId.id}
                         onClick={() => {
                           setSelectedBetId(betId)
-                          setTimeout(() => setStep(3), 100)
+                          setTimeout(() => setStep(3), 120)
                         }}
-                        className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                          selectedBetId?.id === betId.id
-                            ? "border-primary bg-primary/10"
-                            : "border-border hover:border-primary/50"
-                        }`}
+                        className={selectionTileClass(selectedBetId?.id === betId.id)}
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -752,7 +956,7 @@ function DepositContent() {
 
                   <Button
                     variant="outline"
-                    className="w-full bg-transparent"
+                    className="w-full rounded-2xl border-primary/30 text-primary"
                     onClick={() => {
                       if (!selectedPlatform) {
                         toast.error("Veuillez sélectionner une plateforme")
@@ -767,71 +971,59 @@ function DepositContent() {
                       router.push(`/add-bet-id?${params.toString()}`)
                     }}
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="mr-2 h-4 w-4" />
                     {t("addBetId")}
                   </Button>
-                </>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </AppSection>
         )}
 
-        {/* Step 3: Select Network */}
         {step === 3 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("selectNetwork")}</CardTitle>
-              <CardDescription>Choisissez votre réseau de paiement</CardDescription>
-            </CardHeader>
-            <CardContent>
+            <AppSection
+              title="3. Réseau mobile money"
+              subtitle="Sélectionnez le réseau qui traitera le dépôt."
+            >
               {loadingNetworks ? (
-                <div className="text-center py-8">{t("loading")}</div>
+                <div className="py-8 text-center text-muted-foreground">{t("loading")}</div>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
                   {networks?.map((network) => (
                     <div
                       key={network.id}
                       onClick={() => {
                         setSelectedNetwork(network)
-                        setTimeout(() => setStep(4), 100)
+                        setTimeout(() => setStep(4), 120)
                       }}
-                      className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        selectedNetwork?.id === network.id
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/50"
-                      }`}
+                      className={selectionTileClass(selectedNetwork?.id === network.id)}
                     >
                       {selectedNetwork?.id === network.id && (
-                        <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
-                          <Check className="h-3 w-3 text-white" />
+                        <div className="absolute top-2 right-2 rounded-full bg-primary p-1 text-white">
+                          <Check className="h-3 w-3" />
                         </div>
                       )}
                       <img
                         src={network.image || "/placeholder.svg"}
                         alt={network.name}
-                        className="w-full h-16 object-contain mb-2"
+                        className="mb-2 h-16 w-full object-contain"
                       />
-                      <p className="text-center font-medium text-sm">{network.public_name}</p>
+                      <p className="text-center text-sm font-medium">{network.public_name}</p>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </AppSection>
         )}
 
-        {/* Step 4: Select Phone */}
         {step === 4 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("selectPhone")}</CardTitle>
-              <CardDescription>Choisissez votre numéro de téléphone</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <AppSection
+              title="4. Numéro débité"
+              subtitle="Sélectionnez ou ajoutez le numéro associé à ce réseau."
+            >
               {loadingPhones ? (
-                <div className="text-center py-8">{t("loading")}</div>
+                <div className="py-8 text-center text-muted-foreground">{t("loading")}</div>
               ) : (
-                <>
+                <div className="space-y-4">
                   {phones && phones.length > 0 ? (
                     <div className="space-y-2">
                       {phones.map((phone) => (
@@ -839,13 +1031,9 @@ function DepositContent() {
                           key={phone.id}
                           onClick={() => {
                             setSelectedPhone(phone)
-                            setTimeout(() => setStep(5), 100)
+                            setTimeout(() => setStep(5), 120)
                           }}
-                          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                            selectedPhone?.id === phone.id
-                              ? "border-primary bg-primary/10"
-                              : "border-border hover:border-primary/50"
-                          }`}
+                          className={selectionTileClass(selectedPhone?.id === phone.id)}
                         >
                           <div className="flex items-center justify-between">
                             <div>
@@ -880,15 +1068,14 @@ function DepositContent() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>Aucun numéro de téléphone disponible pour {selectedNetwork?.public_name}</p>
-                      <p className="text-sm mt-2">Ajoutez un nouveau numéro ci-dessous</p>
+                    <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 px-4 py-6 text-center text-sm text-muted-foreground">
+                      Aucun numéro disponible pour {selectedNetwork?.public_name}. Ajoutez-en un ci-dessous.
                     </div>
                   )}
 
                   <Button 
                     variant="outline" 
-                    className="w-full bg-transparent" 
+                    className="w-full rounded-2xl border-primary/30 text-primary"
                     onClick={() => {
                       if (!selectedPlatform || !selectedBetId || !selectedNetwork) {
                         toast.error("Veuillez sélectionner une plateforme, un identifiant et un réseau")
@@ -905,34 +1092,31 @@ function DepositContent() {
                       router.push(`/add-phone?${params.toString()}`)
                     }}
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="mr-2 h-4 w-4" />
                     {t("addPhone")} ({selectedNetwork?.public_name})
                   </Button>
-                </>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </AppSection>
         )}
 
-        {/* Step 5: Enter Amount */}
         {step === 5 && (
-          <Card className="mobile-card">
-            <CardHeader>
-              <CardTitle className="mobile-heading">{t("enterAmount")}</CardTitle>
-              <CardDescription className="mobile-text">
-                Montant: {selectedPlatform?.minimun_deposit} - {selectedPlatform?.max_deposit} FCFA
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            <AppSection
+              title="5. Montant et récapitulatif"
+              subtitle={`Respectez les limites de ${selectedPlatform?.minimun_deposit?.toLocaleString() ?? 0} à ${selectedPlatform?.max_deposit?.toLocaleString() ?? 0} FCFA.`}
+            >
+              <div className="space-y-6">
               <div className="space-y-3">
-                <Label htmlFor="amount" className="mobile-text font-medium">{t("amount")} (FCFA)</Label>
+                  <Label htmlFor="amount" className="font-medium">
+                    {t("amount")} (FCFA)
+                  </Label>
                 <Input
                   id="amount"
                   type="number"
                   placeholder="1000"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="mobile-input text-lg"
+                    className="h-12 rounded-2xl text-lg"
                 />
               </div>
 
@@ -940,15 +1124,16 @@ function DepositContent() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
-                  onClick={() => window.open(selectedPlatform.deposit_tuto_link!, "_blank", "noopener,noreferrer")}
-                >
-                  Comment déposer
+                    className="w-full rounded-2xl"
+                    onClick={() =>
+                      window.open(selectedPlatform.deposit_tuto_link!, "_blank", "noopener,noreferrer")
+                    }
+                  >
+                    Voir le tutoriel de dépôt
                 </Button>
               )}
 
-              {/* Summary */}
-              <div className="p-4 bg-muted rounded-lg space-y-2 text-sm">
+                <div className="space-y-2 rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t("platform")}</span>
                   <span className="font-medium">{selectedPlatform?.name}</span>
@@ -978,22 +1163,47 @@ function DepositContent() {
                   <span className="font-medium">{selectedPhone?.phone}</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {/* Navigation Buttons */}
-        <div className="flex gap-3">
-          {step > 1 && (
-            <Button variant="outline" onClick={() => setStep(step - 1)} className="flex-1 h-11">
-              {t("previous")}
-            </Button>
+              {selectedNetwork?.deposit_message && selectedNetwork.deposit_message.trim() !== "" && (
+                  <div className="rounded-2xl border border-blue-200/60 bg-blue-50 p-4 text-sm dark:border-blue-900 dark:bg-blue-950/30">
+                    <p className="text-blue-900 dark:text-blue-100 whitespace-pre-line">
+                    {selectedNetwork.deposit_message}
+                  </p>
+                </div>
+              )}
+              </div>
+            </AppSection>
           )}
-          <Button onClick={handleNext} className="flex-1 h-11">
-            {step === 5 ? t("confirm") : t("next")}
-          </Button>
+
+          {/* <AppSection
+            title="Assistance & raccourcis"
+            subtitle="Un doute ? Utilisez ces actions rapides."
+            variant="surface"
+          >
+            <div className="space-y-3">
+              {helperShortcuts.map((shortcut) => (
+                <button
+                  key={shortcut.title}
+                  className="flex w-full items-start gap-3 rounded-3xl border border-border/60 bg-white/90 px-4 py-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-slate-900/60"
+                  onClick={shortcut.action}
+                >
+                  <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+                    <shortcut.icon className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">{shortcut.title}</p>
+                    <p className="text-xs text-muted-foreground">{shortcut.description}</p>
+                  </div>
+                  <Sparkles className="h-4 w-4 text-primary" />
+                </button>
+              ))}
+              <div className="rounded-3xl border border-dashed border-primary/30 bg-primary/5 p-4 text-xs text-muted-foreground">
+                Besoin d&apos;un accompagnement complet ? Cliquez sur « Contacter le support » pour lancer WhatsApp.
+              </div>
+            </div>
+          </AppSection> */}
         </div>
-      </main>
+      </AppShell>
 
       {/* Bet ID Edit Dialog */}
       <Dialog open={betEditDialogOpen} onOpenChange={(open) => (open ? setBetEditDialogOpen(true) : resetBetEditDialog())}>
@@ -1135,25 +1345,40 @@ function DepositContent() {
         </DialogContent>
       </Dialog>
 
-      {/* Moov USSD Dialog */}
+      {/* USSD Dialog */}
       <Dialog open={showMoovUssdDialog} onOpenChange={setShowMoovUssdDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Finaliser le paiement Moov</DialogTitle>
+            <DialogTitle>Finaliser le paiement</DialogTitle>
             <DialogDescription>
-              Si la composition automatique n&apos;a pas fonctionné, copiez le code ci-dessous et collez-le dans le composeur téléphonique pour terminer votre transaction.
+              Votre dépôt a été créé avec succès. Pour finaliser la transaction, copiez le code USSD ci-dessous et collez-le dans le composeur téléphonique de votre téléphone.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label>Code USSD</Label>
-            <div className="flex gap-2">
-              <Input readOnly value={moovUssdCode ?? ""} className="font-mono" />
-              <Button type="button" onClick={handleCopyMoovCode}>
-                Copier
-              </Button>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Code USSD à composer</Label>
+              <div className="flex gap-2">
+                <Input 
+                  readOnly 
+                  value={moovUssdCode ?? ""} 
+                  className="font-mono text-base"
+                />
+                <Button type="button" onClick={handleCopyMoovCode}>
+                  Copier
+                </Button>
+              </div>
+            </div>
+            <div className="bg-muted p-4 rounded-lg space-y-2">
+              <p className="text-sm font-medium">Instructions :</p>
+              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>Cliquez sur le bouton &quot;Copier&quot; pour copier le code USSD</li>
+                <li>Ouvrez le composeur téléphonique de votre téléphone</li>
+                <li>Collez le code dans le composeur</li>
+                <li>Appuyez sur &quot;Appeler&quot; pour valider la transaction</li>
+              </ol>
             </div>
             <p className="text-xs text-muted-foreground">
-              Composez ce code dans votre téléphone pour valider le dépôt Moov.
+              Si la composition automatique n&apos;a pas fonctionné, utilisez cette méthode pour continuer votre transaction.
             </p>
           </div>
           <div className="flex justify-end pt-4">
@@ -1224,10 +1449,14 @@ function DepositContent() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-4 pt-4">
-            <Button variant="outline" onClick={() => {
+            <Button
+              variant="outline"
+              onClick={() => {
               setShowTransactionLinkDialog(false)
               router.push("/dashboard")
-            }} className="flex-1">
+              }}
+              className="flex-1"
+            >
               {t("cancel")}
             </Button>
             <Button onClick={handleContinueTransaction} className="flex-1">
@@ -1236,7 +1465,7 @@ function DepositContent() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }
 
@@ -1247,3 +1476,4 @@ export default function DepositPage() {
     </AuthGuard>
   )
 }
+

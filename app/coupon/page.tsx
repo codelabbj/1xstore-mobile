@@ -1,17 +1,19 @@
 "use client"
 
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Copy, Check, Ticket } from "lucide-react"
+import { ArrowLeft, Copy, Check, Ticket, Share2, Sparkles } from "lucide-react"
+import toast from "react-hot-toast"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AuthGuard } from "@/components/auth-guard"
+import { AppShell } from "@/app/_components/AppShell"
+import { AppSection } from "@/app/_components/AppSection"
+import { Badge } from "@/components/ui/badge"
 import api from "@/lib/api"
 import type { Coupon, PaginatedResponse } from "@/lib/types"
 import { formatDate } from "@/lib/utils"
-import { useState } from "react"
-import toast from "react-hot-toast"
 
 function CouponContent() {
   const { t } = useTranslation()
@@ -33,92 +35,150 @@ function CouponContent() {
     setTimeout(() => setCopiedCode(null), 2000)
   }
 
-  return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Header */}
-      <header className="bg-background border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-xl font-bold">Mes Coupons</h1>
-        </div>
-      </header>
+  const handleShareCode = async (code: string, platformName?: string) => {
+    const text = platformName
+      ? `Voici mon code promo ${platformName}: ${code}`
+      : `Voici mon code promo: ${code}`
 
-      <main className="container mx-auto px-4 py-6 max-w-2xl space-y-6">
-        {/* Coupons Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Ticket className="h-5 w-5" />
-              Mes coupons
-            </CardTitle>
-            <CardDescription>
-              {couponData?.count || 0} coupon{(couponData?.count || 0) > 1 ? "s" : ""} disponible{(couponData?.count || 0) > 1 ? "s" : ""}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {couponLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-2"></div>
-                <p className="text-sm">{t("loading")}</p>
-              </div>
-            ) : !couponData?.results || couponData.results.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Ticket className="h-12 w-12 mx-auto mb-2 text-muted-foreground/50" />
-                <p>Aucun coupon pour le moment</p>
-                <p className="text-sm mt-1">Vos coupons apparaîtront ici</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {couponData.results.map((coupon) => (
-                  <div key={coupon.id} className="p-4 rounded-lg border bg-gradient-to-r from-primary/5 to-primary/10 hover:bg-primary/10 transition-colors">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          {coupon.bet_app_details?.image && (
-                            <img
-                              src={coupon.bet_app_details.image}
-                              alt={coupon.bet_app_details.name || "Platform"}
-                              className="w-6 h-6 object-contain"
-                            />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            {coupon.bet_app_details?.name && (
-                              <p className="font-medium text-sm text-foreground">{coupon.bet_app_details.name}</p>
-                            )}
-                            <p className="font-mono font-bold text-lg text-primary">{coupon.code}</p>
-                          </div>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{formatDate(coupon.created_at)}</p>
+    if (navigator.share) {
+      try {
+        await navigator.share({ text })
+      } catch {
+        handleCopyCode(code)
+      }
+    } else {
+      handleCopyCode(code)
+    }
+  }
+
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <button
+        className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/10 bg-white/80 text-foreground shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl dark:border-white/10 dark:bg-white/10"
+        onClick={() => router.push("/dashboard")}
+        aria-label="Retour"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </button>
+      <Badge variant="secondary" className="rounded-2xl border border-primary/10 bg-primary/5 text-primary">
+        {couponData?.count || 0} coupon{(couponData?.count || 0) > 1 ? "s" : ""}
+      </Badge>
+    </div>
+  )
+
+  return (
+    <AppShell
+      title="Mes Coupons"
+      subtitle="Codes promo actifs et partageables"
+      status="Prêt à partager"
+      actions={headerActions}
+    >
+      <div className="space-y-6">
+        {/* Hero Section */}
+        <AppSection
+          variant="highlight"
+          title="Espace coupons"
+          subtitle="Partagez vos codes et gagnez des bonus"
+          // badge={
+          //   <Badge className="gap-2 bg-white/20 text-white">
+          //     <Sparkles className="h-3.5 w-3.5" />
+          //     Parrainage
+          //   </Badge>
+          // }
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-2xl border border-white/40 bg-white/40 px-4 py-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
+              <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Coupons actifs</p>
+              <p className="text-2xl font-bold text-foreground">{couponData?.count || 0}</p>
+            </div>
+            <div className="rounded-2xl border border-white/40 bg-white/40 px-4 py-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
+              <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Partages</p>
+              <p className="text-2xl font-bold text-foreground">∞</p>
+            </div>
+          </div>
+        </AppSection>
+
+        {/* Coupons List */}
+        <AppSection
+          title="Codes disponibles"
+          subtitle="Copiez ou partagez vos codes promo"
+        >
+          {couponLoading ? (
+            <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-primary/30 bg-white/70 py-10 text-sm text-muted-foreground dark:bg-slate-900/40">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-3 border-primary border-r-transparent" />
+              Chargement...
+            </div>
+          ) : !couponData?.results || couponData.results.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 px-4 py-10 text-center">
+              <Ticket className="mx-auto mb-3 h-12 w-12 text-primary/40" />
+              <p className="text-sm font-medium text-muted-foreground">Aucun coupon pour le moment</p>
+              <p className="mt-1 text-xs text-muted-foreground">Vos coupons apparaîtront ici</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {couponData.results.map((coupon) => (
+                <div
+                  key={coupon.id}
+                  className="rounded-3xl border border-primary/20 bg-gradient-to-r from-white via-primary/5 to-primary/10 p-4 dark:from-slate-900 dark:via-primary/10 dark:to-primary/20"
+                >
+                  <div className="flex items-center gap-3">
+                    {coupon.bet_app_details?.image ? (
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm dark:bg-slate-800">
+                        <img
+                          src={coupon.bet_app_details.image}
+                          alt={coupon.bet_app_details.name || "Platform"}
+                          className="h-8 w-8 object-contain"
+                        />
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCopyCode(coupon.code)}
-                        className="flex-shrink-0"
-                      >
-                        {copiedCode === coupon.code ? (
-                          <>
-                            <Check className="h-4 w-4 mr-2" />
-                            Copié
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-4 w-4 mr-2" />
-                            Copier
-                          </>
-                        )}
-                      </Button>
+                    ) : (
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                        <Ticket className="h-6 w-6" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      {coupon.bet_app_details?.name && (
+                        <p className="text-sm font-medium text-foreground">{coupon.bet_app_details.name}</p>
+                      )}
+                      <p className="font-mono text-lg font-bold text-primary">{coupon.code}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(coupon.created_at)}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 rounded-xl border-primary/30 text-primary"
+                      onClick={() => handleCopyCode(coupon.code)}
+                    >
+                      {copiedCode === coupon.code ? (
+                        <>
+                          <Check className="mr-2 h-4 w-4" />
+                          Copié
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copier
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 rounded-xl border-primary/30 text-primary"
+                      onClick={() => handleShareCode(coupon.code, coupon.bet_app_details?.name)}
+                    >
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Partager
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </AppSection>
+      </div>
+    </AppShell>
   )
 }
 
@@ -129,4 +189,3 @@ export default function CouponPage() {
     </AuthGuard>
   )
 }
-

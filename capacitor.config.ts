@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from "@capacitor/cli"
 
 const config: CapacitorConfig = {
-  appId: "com.turnaicash.app",
-  appName: "TURAINCASH",
+  appId: "com.onexstore.app",
+  appName: "1XSTORE",
   webDir: "out",
   //bundledWebRuntime: false,
   // plugins: {
@@ -13,12 +13,12 @@ const config: CapacitorConfig = {
   // plugins: {
   //   CapacitorUpdater: {
   //     autoUpdate: true,
-  //     server: "https://turnaicash-mobile-app-1-p3ef20nbk-codelabbjgmailcoms-projects.vercel.app",
+  //     server: "https://1xstore-mobile-app-1-p3ef20nbk-codelabbjgmailcoms-projects.vercel.app",
   //   }
   // },
   server: {
     // androidScheme: "https",
-    url: "https://turnaicash-mobile-app-1.vercel.app",
+    url: "https://1xstore-mobile-app.vercel.app",
     cleartext: false
   },
 }

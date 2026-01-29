@@ -14,10 +14,10 @@ apply plugin: 'com.android.application'
 
 
 // android {
-//     namespace "com.turnaicash.app"
+//     namespace "com.1xstore.app"
 //     compileSdk rootProject.ext.compileSdkVersion
 //     defaultConfig {
-//         applicationId "com.turnaicash.app"
+//         applicationId "com.1xstore.app"
 //         minSdkVersion rootProject.ext.minSdkVersion
 //         targetSdkVersion rootProject.ext.targetSdkVersion
 //         versionCode 1
@@ -38,25 +38,25 @@ apply plugin: 'com.android.application'
 // }
 
 android {
-    namespace "com.turnaicash.app"
+    namespace "com.onexstore.app"
     compileSdkVersion 35
 
     defaultConfig {
-//        applicationId "com.turnaicash.android"
-        applicationId "com.turaincash.android"   // ✅ correct
+//        applicationId "com.onexstore.android"
+        applicationId "com.codelab.xpay.onexpay"   // ✅ correct
         minSdkVersion 23
         targetSdkVersion 34
         //targetSdkVersion 35  // <-- update this too for consistency
 
-        versionCode 5
-        versionName "1.0.5"
+        versionCode 1
+        versionName "1.0.1"
     }
 
     signingConfigs {
         release {
-            storeFile file("turnaicash.keystore")
+            storeFile file("1xstore.keystore")
             storePassword "CodeLab1992"
-            keyAlias "turnaicash"
+            keyAlias "1xstore"
             keyPassword "CodeLab1992"
         }
     }

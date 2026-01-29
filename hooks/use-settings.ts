@@ -4,6 +4,12 @@ import api from "@/lib/api"
 interface Settings {
   referral_bonus?: boolean
   moov_marchand_phone?: string | null
+  whatsapp_phone?: string | null
+  telegram?: string | null
+  payment_by_link?: boolean
+  orange_marchand_phone?: string | null
+  bf_moov_marchand_phone?: string | null
+  bf_orange_marchand_phone?: string | null
   [key: string]: any
 }
 

@@ -9,7 +9,13 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
+    // Set initial app version if not already set
+    if (typeof window !== 'undefined' && !localStorage.getItem('app_version')) {
+      localStorage.setItem('app_version', '0.1.0');
+    }
+    
     checkForUpdates();
+    
     if (isAuthenticated()) {
       router.push("/dashboard")
     } else {

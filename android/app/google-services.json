@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "665076337085",
-    "project_id": "turaincash-57c48",
-    "storage_bucket": "turaincash-57c48.firebasestorage.app"
+    "project_number": "739638156695",
+    "project_id": "xpay-4c814",
+    "storage_bucket": "xpay-4c814.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:665076337085:android:bd4148cd1d989183292ad4",
+        "mobilesdk_app_id": "1:739638156695:android:9d9bc0be74d171aaaf78d2",
         "android_client_info": {
-          "package_name": "com.turaincash.android"
+          "package_name": "com.codelab.xpay.onexpay"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyC7XoTvmAQ5UCViDMtu8yAwNT7GikhW6JU"
+          "current_key": "AIzaSyCRxevCIE1KNlJNaP10L0IEwtwnBA-0XzI"
         }
       ],
       "services": {

@@ -10,9 +10,9 @@ const firebaseConfig = {
   // appId: "1:123456789:web:abcdef"
 
   apiKey: "AIzaSyDj4CbDhlN_dxQ1exeCtPTgSZZfN8IAddM",
-  authDomain: "turaincash-57c48.firebaseapp.com",
-  projectId: "turaincash-57c48",
-  storageBucket: "turaincash-57c48.firebasestorage.app",
+  authDomain: "1xstore-57c48.firebaseapp.com",
+  projectId: "1xstore-57c48",
+  storageBucket: "1xstore-57c48.firebasestorage.app",
   messagingSenderId: "665076337085",
   appId: "1:665076337085:web:8a360f95eaf720e0292ad4",
   measurementId: "G-VVVTVB21R9"

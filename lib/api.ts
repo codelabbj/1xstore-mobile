@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BASE_URL || "https://api.turaincash.com",
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL || "https://api.1xstore.org",
 })
 
 // Request interceptor to add auth token
@@ -33,7 +33,7 @@ api.interceptors.response.use(
           }
 
           const res = await axios.post(
-            `${process.env.NEXT_PUBLIC_BASE_URL || "https://api.turaincash.com"}/auth/token/refresh/`,
+            `${process.env.NEXT_PUBLIC_BASE_URL || "https://api.1xstore.org"}/auth/refresh`,
             { refresh },
           )
 

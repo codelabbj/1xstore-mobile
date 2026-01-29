@@ -1,24 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Gift, TrendingUp } from "lucide-react"
+import { ArrowLeft, Gift, TrendingUp, Sparkles, Coins } from "lucide-react"
 import toast from "react-hot-toast"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AuthGuard } from "@/components/auth-guard"
+import { AppShell } from "@/app/_components/AppShell"
+import { AppSection } from "@/app/_components/AppSection"
+import { Badge } from "@/components/ui/badge"
 import { getUser } from "@/lib/auth"
 import api from "@/lib/api"
 import type { Bonus, PaginatedResponse, Platform, UserAppId } from "@/lib/types"
 import { formatDate } from "@/lib/utils"
 import { useSettings } from "@/hooks/use-settings"
-import { useEffect } from "react"
 
 function BonusContent() {
   const { t } = useTranslation()
@@ -168,63 +169,69 @@ function BonusContent() {
     bonusTransactionMutation.mutate()
   }
 
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <button
+        className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/10 bg-white/80 text-foreground shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl dark:border-white/10 dark:bg-white/10"
+        onClick={() => router.push("/dashboard")}
+        aria-label="Retour"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </button>
+      <Badge variant="secondary" className="rounded-2xl border border-purple-200 bg-purple-500/10 text-purple-700 dark:border-purple-900/40 dark:text-purple-200">
+        {bonusAvailable.toLocaleString()} FCFA
+      </Badge>
+    </div>
+  )
+
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Header */}
-      <header className="bg-background border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-xl font-bold">{t("bonus")}</h1>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-6 max-w-2xl space-y-6">
-        {/* Current Bonus Card */}
-        <Card className="bg-gradient-to-br from-amber-500 to-orange-500 text-white border-0">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm opacity-90">{t("bonusAvailable")}</p>
-                <p className="text-4xl font-bold">{bonusAvailable} FCFA</p>
-                <p className="text-xs opacity-75">Utilisable pour vos transactions</p>
+    <>
+      <AppShell
+        title="Mes Bonus"
+        subtitle="Transformez vos gains en dépôts"
+        status="Bonus disponible"
+        actions={headerActions}
+      >
+        <div className="space-y-6">
+          {/* Hero Bonus Card */}
+          <AppSection
+            variant="highlight"
+            title="Solde bonus"
+            subtitle="Utilisez vos bonus pour alimenter vos comptes de paris"
+            // badge={
+            //   <Badge className="gap-2 bg-purple-500/20 text-purple-100">
+            //     <Sparkles className="h-3.5 w-3.5" />
+            //     Parrainage
+            //   </Badge>
+            // }
+          >
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-white/40 bg-white/40 px-4 py-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
+                <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Disponible</p>
+                <p className="text-2xl font-bold text-foreground">{bonusAvailable.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">FCFA</p>
               </div>
-              <div className="bg-white/20 rounded-full p-4">
-                <Gift className="h-12 w-12" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Total Earned Card */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total gagné</p>
-                <p className="text-2xl font-bold">{totalBonus} FCFA</p>
-              </div>
-              <div className="bg-green-500/10 rounded-full p-3">
-                <TrendingUp className="h-6 w-6 text-green-500" />
+              <div className="rounded-2xl border border-white/40 bg-white/40 px-4 py-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
+                <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">Total gagné</p>
+                <p className="text-2xl font-bold text-foreground">{totalBonus.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">FCFA</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </AppSection>
 
-        {/* Create Bonus Transaction */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Utiliser mon bonus</CardTitle>
-            <CardDescription>Créez une transaction avec votre bonus disponible</CardDescription>
-          </CardHeader>
-          <CardContent>
+          {/* Create Bonus Transaction */}
+          <AppSection
+            title="Utiliser mon bonus"
+            subtitle="Transférez votre bonus vers un compte de pari"
+          >
             {bonusAvailable > 0 ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="platform">{t("platform")}</Label>
+                  <Label htmlFor="platform" className="font-medium">{t("platform")}</Label>
                   {loadingPlatforms ? (
-                    <div className="text-sm text-muted-foreground">{t("loading")}</div>
+                    <div className="flex h-12 items-center rounded-xl border border-input bg-background px-4 text-sm text-muted-foreground">
+                      Chargement...
+                    </div>
                   ) : (
                     <Select
                       value={selectedPlatform?.id || ""}
@@ -234,7 +241,7 @@ function BonusContent() {
                         setSelectedBetId(null)
                       }}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-12 rounded-xl text-base">
                         <SelectValue placeholder="Sélectionner une plateforme" />
                       </SelectTrigger>
                       <SelectContent>
@@ -244,7 +251,7 @@ function BonusContent() {
                               <img
                                 src={platform.image || "/placeholder.svg"}
                                 alt={platform.name}
-                                className="w-6 h-6 object-contain"
+                                className="h-6 w-6 object-contain"
                               />
                               {platform.name}
                             </div>
@@ -257,9 +264,11 @@ function BonusContent() {
 
                 {selectedPlatform && (
                   <div className="space-y-2">
-                    <Label htmlFor="betId">{t("selectBetId")}</Label>
+                    <Label htmlFor="betId" className="font-medium">{t("selectBetId")}</Label>
                     {loadingBetIds ? (
-                      <div className="text-sm text-muted-foreground">{t("loading")}</div>
+                      <div className="flex h-12 items-center rounded-xl border border-input bg-background px-4 text-sm text-muted-foreground">
+                        Chargement...
+                      </div>
                     ) : (
                       <Select
                         value={selectedBetId?.id.toString() || ""}
@@ -268,7 +277,7 @@ function BonusContent() {
                           setSelectedBetId(betId || null)
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-12 rounded-xl text-base">
                           <SelectValue placeholder="Sélectionner un identifiant de pari" />
                         </SelectTrigger>
                         <SelectContent>
@@ -284,7 +293,7 @@ function BonusContent() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Montant (FCFA)</Label>
+                  <Label htmlFor="amount" className="font-medium">Montant (FCFA)</Label>
                   <Input
                     id="amount"
                     type="number"
@@ -292,78 +301,64 @@ function BonusContent() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     max={bonusAvailable}
+                    className="h-12 rounded-xl text-lg"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Maximum: {bonusAvailable} FCFA
+                    Maximum: {bonusAvailable.toLocaleString()} FCFA
                   </p>
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="h-12 w-full rounded-xl bg-gradient-to-r from-purple-500 to-fuchsia-500 hover:from-purple-600 hover:to-fuchsia-600"
                   disabled={!selectedPlatform || !selectedBetId || !amount || bonusTransactionMutation.isPending}
                 >
-                  {bonusTransactionMutation.isPending ? t("loading") : "Créer la transaction"}
+                  {bonusTransactionMutation.isPending ? "Création..." : "Créer la transaction"}
                 </Button>
               </form>
             ) : (
-              <div className="text-center py-6">
-                <p className="text-muted-foreground">
-                  Vous n'avez pas de bonus disponible pour le moment.
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Vos bonus apparaîtront ici une fois que vous en aurez reçu.
-                </p>
+              <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 px-4 py-8 text-center text-sm text-muted-foreground">
+                Aucun bonus disponible. Parrainez des amis pour gagner des bonus !
               </div>
             )}
-          </CardContent>
-        </Card>
+          </AppSection>
 
-        {/* Bonus History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Historique des bonus</CardTitle>
-            <CardDescription>
-              {bonusData?.count || 0} bonus reçu{(bonusData?.count || 0) > 1 ? "s" : ""}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          {/* Bonus History */}
+          <AppSection
+            title="Historique des bonus"
+            subtitle="Retrouvez tous vos gains de parrainage"
+          >
             {bonusLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mb-2"></div>
-                <p className="text-sm">{t("loading")}</p>
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-primary/30 bg-white/70 py-10 text-sm text-muted-foreground dark:bg-slate-900/40">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-3 border-primary border-r-transparent" />
+                Chargement...
               </div>
             ) : !bonusData?.results || bonusData.results.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Gift className="h-12 w-12 mx-auto mb-2 text-muted-foreground/50" />
-                <p>Aucun bonus pour le moment</p>
-                <p className="text-sm mt-1">Vos bonus apparaîtront ici</p>
+              <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 px-4 py-8 text-center text-sm text-muted-foreground">
+                Aucun historique de bonus
               </div>
             ) : (
               <div className="space-y-3">
                 {bonusData.results.map((bonus) => (
-                  <div key={bonus.id} className="p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-amber-500/10 rounded-full p-2">
-                          <Gift className="h-5 w-5 text-amber-500" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{bonus.reason_bonus}</p>
-                          <p className="text-sm text-muted-foreground">{formatDate(bonus.created_at)}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-lg text-amber-500">+{bonus.amount} FCFA</p>
-                      </div>
+                  <div
+                    key={bonus.id}
+                    className="flex items-center gap-3 rounded-2xl border border-border/60 bg-white/90 px-4 py-3 dark:bg-slate-900/60"
+                  >
+                    <div className="rounded-xl bg-purple-500/10 p-2.5 text-purple-600 dark:text-purple-300">
+                      <Gift className="h-5 w-5" />
                     </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{bonus.reason_bonus}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(bonus.created_at)}</p>
+                    </div>
+                    <p className="text-sm font-bold text-purple-600 dark:text-purple-300">+{bonus.amount.toLocaleString()}</p>
                   </div>
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
-      </main>
+          </AppSection>
+        </div>
+      </AppShell>
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
@@ -381,9 +376,9 @@ function BonusContent() {
               <span className="text-muted-foreground">ID de pari</span>
               <span className="font-medium">{selectedBetId?.user_app_id}</span>
             </div>
-            <div className="flex justify-between text-lg font-bold pt-2 border-t">
+            <div className="flex justify-between border-t pt-2 text-lg font-bold">
               <span>Montant</span>
-              <span className="text-primary">{amount} FCFA</span>
+              <span className="text-purple-600">{amount} FCFA</span>
             </div>
           </div>
           <div className="flex gap-4">
@@ -393,14 +388,14 @@ function BonusContent() {
             <Button
               onClick={handleConfirm}
               disabled={bonusTransactionMutation.isPending}
-              className="flex-1"
+              className="flex-1 bg-gradient-to-r from-purple-500 to-fuchsia-500 hover:from-purple-600 hover:to-fuchsia-600"
             >
               {bonusTransactionMutation.isPending ? t("loading") : "Confirmer"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }
 

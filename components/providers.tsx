@@ -9,6 +9,8 @@ import i18n from "@/lib/i18n"
 import { useState, useEffect } from "react"
 import ErrorBoundary from "./error-boundary"
 import { notificationService } from "@/lib/firebase-notifications"
+import { unifiedFcmService } from "@/lib/firebase"
+import { getUser } from "@/lib/auth"
 import { ThemeProvider } from "@/components/theme-provider"
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -25,7 +27,25 @@ export function Providers({ children }: { children: React.ReactNode }) {
   )
 
   useEffect(() => {
-    notificationService.initialize();
+    const initializeNotifications = async () => {
+      // Initialize notification service
+      await notificationService.initialize();
+
+      // Check if user is authenticated and send FCM token
+      const user = getUser();
+      if (user) {
+        // Wait a bit for FCM token to be available
+        setTimeout(async () => {
+          await unifiedFcmService.initialize();
+          const token = unifiedFcmService.getToken();
+          if (token) {
+            await unifiedFcmService['sendTokenToServer'](token);
+          }
+        }, 1000);
+      }
+    };
+
+    initializeNotifications();
   }, []);
 
   return (

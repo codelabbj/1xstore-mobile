@@ -1,4 +1,4 @@
-package com.turnaicash.app;
+package com.onexstore.app;
 
 import android.webkit.DownloadListener;
 import android.webkit.WebView;

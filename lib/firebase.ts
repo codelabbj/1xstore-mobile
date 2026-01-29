@@ -94,9 +94,28 @@ export class UnifiedFCMService {
     }
 
     // Setup foreground message listener
-    onMessage(messaging, (payload) => {
+    onMessage(messaging, async (payload) => {
       console.log('Foreground message received (Web):', payload);
-      // Show custom notification or handle data
+
+      // Show in-app notification
+      if (typeof window !== 'undefined') {
+        try {
+          const toast = (await import('react-hot-toast')).default;
+          const notificationTitle = payload.notification?.title || 'Notification';
+          const notificationBody = payload.notification?.body || '';
+
+          toast(notificationTitle, {
+            description: notificationBody,
+            duration: 5000,
+            style: {
+              background: '#333',
+              color: '#fff',
+            },
+          });
+        } catch (error) {
+          console.error('Error showing in-app notification:', error);
+        }
+      }
     });
   }
 
@@ -125,8 +144,25 @@ export class UnifiedFCMService {
       }
 
       // Listen for notification received
-      PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      PushNotifications.addListener('pushNotificationReceived', async (notification) => {
         console.log('Push notification received (Mobile):', notification);
+
+        // Show in-app notification
+        if (typeof window !== 'undefined') {
+          try {
+            const toast = (await import('react-hot-toast')).default;
+            toast(notification.title || 'Notification', {
+              description: notification.body || '',
+              duration: 5000,
+              style: {
+                background: '#333',
+                color: '#fff',
+              },
+            });
+          } catch (error) {
+            console.error('Error showing in-app notification:', error);
+          }
+        }
       });
 
       // Listen for notification action performed
@@ -168,21 +204,33 @@ export class UnifiedFCMService {
    */
   private async sendTokenToServer(token: string): Promise<void> {
     try {
-      const response = await fetch('/api/fcm/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token,
-          platform: this.platform,
-          userId: null, // Add your user ID logic
-        }),
+      // Import api here to avoid circular dependencies
+      const api = (await import('@/lib/api')).default;
+
+      // Get user data from localStorage
+      const userStr = localStorage.getItem('user');
+      let userId = null;
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          userId = user.id;
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+        }
+      }
+
+      if (!userId) {
+        console.warn('No user ID available, skipping FCM token registration');
+        return;
+      }
+
+      const response = await api.post('/mobcash/devices/', {
+        registration_id: token,
+        type: this.platform === 'ios' ? 'ios' : 'android', // Use 'ios' for iOS, 'android' for others
+        user_id: userId,
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send token to server');
-      }
+      console.log('FCM token sent to server successfully');
     } catch (error) {
       console.error('Error sending token to server:', error);
     }

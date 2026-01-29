@@ -4,14 +4,14 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Providers } from "@/components/providers"
-import { UpdateCheck } from "@/app/_components/UpdateCheck"
+// import { UpdateCheck } from "@/app/_components/UpdateCheck"
 import { MobileBackButtonHandler } from "@/components/mobile-back-button-handler"
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "TURAINCASH - Dépôt et Retrait",
-  description: "Application de gestion de dépôts et retraits pour paris sportifs",
+  title: "1xstore - Blue Horizon",
+  description: "Nouvelle expérience premium pour piloter dépôts, retraits et coupons",
   generator: "v0.app",
   viewport: {
     width: "device-width",
@@ -19,11 +19,11 @@ export const metadata: Metadata = {
     maximumScale: 1,
     userScalable: false,
   },
-  themeColor: "#00FFFF",
+  themeColor: "#3FA9FF",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "TURAINCASH",
+    title: "1xstore",
   },
   formatDetection: {
     telephone: false,
@@ -93,8 +93,19 @@ export default function RootLayout({
         />
         <Providers>
           <MobileBackButtonHandler />
-          <UpdateCheck />
+          {/* <UpdateCheck /> */}
           {children}
+          <footer className="px-4 py-6 text-center text-xs text-muted-foreground">
+            Développé par{" "}
+            <a
+              href="https://codelab.bj"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Code Lab
+            </a>
+          </footer>
         </Providers>
         <Analytics />
       </body>
