@@ -150,7 +150,7 @@ export class UnifiedFCMService {
       if (Capacitor.getPlatform() === 'android') {
         await LocalNotifications.createChannel({
           id: '1xstore_foreground',
-          name: '1XSTORE Notifications',
+          name: '1xstore_foreground',
           description: 'Notifications de l\'application 1XSTORE en premier plan',
           importance: 5, // High
           visibility: 1, // Public
