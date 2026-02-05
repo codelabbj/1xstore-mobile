@@ -104,8 +104,7 @@ export class UnifiedFCMService {
           const notificationTitle = payload.notification?.title || 'Notification';
           const notificationBody = payload.notification?.body || '';
 
-          toast(notificationTitle, {
-            description: notificationBody,
+          toast(`${notificationTitle}: ${notificationBody}`, {
             duration: 5000,
             style: {
               background: '#333',
@@ -124,51 +123,99 @@ export class UnifiedFCMService {
    */
   private async initializeMobile(): Promise<void> {
     const { PushNotifications } = await import('@capacitor/push-notifications');
+    const { LocalNotifications } = await import('@capacitor/local-notifications');
     const { FirebaseMessaging } = await import('@capacitor-firebase/messaging');
 
-    // Request permission
-    const permissionStatus = await PushNotifications.requestPermissions();
-    
-    if (permissionStatus.receive === 'granted') {
-      // Register for push notifications
-      await PushNotifications.register();
+    console.log('🚀 [FCM] Initializing native push notifications...');
 
-      // Get FCM token
-      const result = await FirebaseMessaging.getToken();
-      this.token = result.token;
-
-      if (this.token) {
-        console.log('FCM Token (Mobile):', this.token);
-        localStorage.setItem('fcm_token', this.token);
-        await this.sendTokenToServer(this.token);
+    try {
+      // 1. Check/Request Permissions
+      let permStatus = await PushNotifications.checkPermissions();
+      if (permStatus.receive === 'prompt' || permStatus.receive === 'prompt-with-rationale') {
+        permStatus = await PushNotifications.requestPermissions();
       }
 
-      // Listen for notification received
-      PushNotifications.addListener('pushNotificationReceived', async (notification) => {
-        console.log('Push notification received (Mobile):', notification);
+      if (permStatus.receive !== 'granted') {
+        console.warn('🚫 [FCM] Push permission not granted:', permStatus.receive);
+        return;
+      }
 
-        // Show in-app notification
-        if (typeof window !== 'undefined') {
-          try {
-            const toast = (await import('react-hot-toast')).default;
-            toast(notification.title || 'Notification', {
-              description: notification.body || '',
-              duration: 5000,
-              style: {
-                background: '#333',
-                color: '#fff',
-              },
-            });
-          } catch (error) {
-            console.error('Error showing in-app notification:', error);
-          }
+      // 2. Local Notification Permissions
+      let localPermStatus = await LocalNotifications.checkPermissions();
+      if (localPermStatus.display === 'prompt') {
+        localPermStatus = await LocalNotifications.requestPermissions();
+      }
+
+      // 3. Create High Priority Channel for Android
+      if (Capacitor.getPlatform() === 'android') {
+        await LocalNotifications.createChannel({
+          id: '1xstore_foreground',
+          name: '1XSTORE Notifications',
+          description: 'Notifications de l\'application 1XSTORE en premier plan',
+          importance: 5, // High
+          visibility: 1, // Public
+          sound: 'default',
+          vibration: true,
+          lights: true
+        });
+        console.log('✅ [FCM] High priority channel created');
+      }
+
+      // 4. Set up Listeners BEFORE registration
+      PushNotifications.addListener('registration', async (token) => {
+        console.log('🔔 [FCM] Registration success! Token:', token.value);
+        this.token = token.value;
+        localStorage.setItem('fcm_token', token.value);
+        await this.sendTokenToServer(token.value);
+      });
+
+      PushNotifications.addListener('registrationError', (error) => {
+        console.error('❌ [FCM] Registration error:', error);
+      });
+
+      PushNotifications.addListener('pushNotificationReceived', async (notification) => {
+        console.log('📨 [FCM] Foreground push received:', notification);
+
+        // Schedule local notification for head-up display
+        try {
+          await LocalNotifications.schedule({
+            notifications: [{
+              title: notification.title || 'Notification',
+              body: notification.body || '',
+              id: Math.floor(Math.random() * 2147483647),
+              schedule: { at: new Date(Date.now() + 100) },
+              sound: 'default',
+              extra: notification.data,
+              channelId: '1xstore_foreground',
+              smallIcon: 'ic_notification', // Ensure this exists in Android resources
+            }]
+          });
+        } catch (error) {
+          console.error('❌ [FCM] Error scheduling local notification:', error);
         }
       });
 
-      // Listen for notification action performed
-      PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-        console.log('Push notification action performed:', notification);
+      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+        console.log('👆 [FCM] Action performed:', action);
       });
+
+      // 5. Register for push notifications
+      await PushNotifications.register();
+
+      // 6. Fallback: Get token via Firebase Messaging plugin if registration listener didn't fire yet or for extra reliability
+      try {
+        const result = await FirebaseMessaging.getToken();
+        if (result.token && result.token !== this.token) {
+          this.token = result.token;
+          localStorage.setItem('fcm_token', result.token);
+          await this.sendTokenToServer(result.token);
+        }
+      } catch (error) {
+        console.error('❌ [FCM] Firebase Messaging token error:', error);
+      }
+
+    } catch (error) {
+      console.error('❌ [FCM] Initialization error:', error);
     }
   }
 
@@ -224,15 +271,15 @@ export class UnifiedFCMService {
         return;
       }
 
-      const response = await api.post('/mobcash/devices/', {
+      await api.post('/mobcash/devices/', {
         registration_id: token,
-        type: this.platform === 'ios' ? 'ios' : 'android', // Use 'ios' for iOS, 'android' for others
+        type: this.platform === 'ios' ? 'ios' : 'android',
         user_id: userId,
       });
 
-      console.log('FCM token sent to server successfully');
+      console.log('✅ [FCM] Token registered on server');
     } catch (error) {
-      console.error('Error sending token to server:', error);
+      console.error('❌ [FCM] Error sending token to server:', error);
     }
   }
 
