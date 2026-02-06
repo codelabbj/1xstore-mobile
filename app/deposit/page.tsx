@@ -116,19 +116,19 @@ function DepositContent() {
 
   type DepositReturnData =
     | {
-        action: "addBet"
-        platformId: string
-        user_app_id: string
-        targetStep?: number
-      }
+      action: "addBet"
+      platformId: string
+      user_app_id: string
+      targetStep?: number
+    }
     | {
-        action: "addPhone"
-        platformId: string
-        betUserAppId: string
-        networkId: number
-        phone: string
-        targetStep?: number
-      }
+      action: "addPhone"
+      platformId: string
+      betUserAppId: string
+      networkId: number
+      phone: string
+      targetStep?: number
+    }
 
   type SearchUserResponse = {
     UserId: number
@@ -181,7 +181,9 @@ function DepositContent() {
   const { data: platforms, isLoading: loadingPlatforms } = useQuery({
     queryKey: ["platforms"],
     queryFn: async () => {
-      const response = await api.get<Platform[]>("/mobcash/plateform")
+      const response = await api.get<Platform[]>("/mobcash/plateform", {
+        params: { type: "deposit" },
+      })
       return response.data.filter((p) => p.enable)
     },
   })
@@ -203,7 +205,9 @@ function DepositContent() {
   const { data: networks, isLoading: loadingNetworks } = useQuery({
     queryKey: ["networks"],
     queryFn: async () => {
-      const response = await api.get<NetworkType[]>("/mobcash/network")
+      const response = await api.get<NetworkType[]>("/mobcash/network", {
+        params: { type: "deposit" },
+      })
       return response.data.filter((n) => n.active_for_deposit)
     },
     enabled: !!selectedPlatform,
@@ -683,19 +687,19 @@ function DepositContent() {
     },
     onError: (error: any) => {
       // Check for rate limit error (error_time_message) in multiple possible locations
-      const errorData = 
-        error?.originalError?.response?.data || 
-        error?.response?.data || 
+      const errorData =
+        error?.originalError?.response?.data ||
+        error?.response?.data ||
         error?.data
-      
-      const timeMessage = 
+
+      const timeMessage =
         errorData?.error_time_message ||
         error?.originalError?.response?.data?.error_time_message ||
         error?.response?.data?.error_time_message
-      
+
       if (timeMessage) {
-        const message = Array.isArray(timeMessage) 
-          ? timeMessage[0] 
+        const message = Array.isArray(timeMessage)
+          ? timeMessage[0]
           : timeMessage
         toast.error(`Trop de tentatives. Veuillez réessayer dans ${message}`)
       } else {
@@ -774,17 +778,17 @@ function DepositContent() {
 
   const headerActions = (
     <div className="flex items-center gap-2">
-          <button
+      <button
         className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/10 bg-white/80 text-foreground shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl dark:border-white/10 dark:bg-white/10"
         onClick={handleBackNavigation}
         aria-label="Retour"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </button>
       <Badge variant="secondary" className="rounded-2xl border border-primary/10 bg-primary/5 text-primary">
         Étape {step}/{DEPOSIT_STEPS.length}
       </Badge>
-          </div>
+    </div>
   )
 
   const floatingControls = (
@@ -797,7 +801,7 @@ function DepositContent() {
       <Button className="flex-1" onClick={handleNext}>
         {step === 5 ? t("confirm") : t("next")}
       </Button>
-        </div>
+    </div>
   )
 
   const helperShortcuts = [
@@ -860,7 +864,7 @@ function DepositContent() {
           </div>
           </AppSection> */}
 
-        {step === 1 && (
+          {step === 1 && (
             <AppSection
               title="1. Choisissez la plateforme"
               subtitle="Sélectionnez le bookmaker sur lequel vous souhaitez déposer."
@@ -900,9 +904,9 @@ function DepositContent() {
                 </div>
               )}
             </AppSection>
-        )}
+          )}
 
-        {step === 2 && (
+          {step === 2 && (
             <AppSection
               title="2. Identifiant de pari"
               subtitle="Choisissez un identifiant vérifié ou ajoutez-en un nouveau."
@@ -977,9 +981,9 @@ function DepositContent() {
                 </div>
               )}
             </AppSection>
-        )}
+          )}
 
-        {step === 3 && (
+          {step === 3 && (
             <AppSection
               title="3. Réseau mobile money"
               subtitle="Sélectionnez le réseau qui traitera le dépôt."
@@ -1013,9 +1017,9 @@ function DepositContent() {
                 </div>
               )}
             </AppSection>
-        )}
+          )}
 
-        {step === 4 && (
+          {step === 4 && (
             <AppSection
               title="4. Numéro débité"
               subtitle="Sélectionnez ou ajoutez le numéro associé à ce réseau."
@@ -1040,29 +1044,29 @@ function DepositContent() {
                               <p className="font-medium">{phone.phone}</p>
                               <p className="text-sm text-muted-foreground">Numéro de téléphone</p>
                             </div>
-                          <div className="flex items-center gap-1">
-                            {selectedPhone?.id === phone.id && (
-                              <div className="bg-primary rounded-full p-1">
-                                <Check className="h-4 w-4 text-white" />
-                              </div>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                              onClick={(event) => handleEditPhone(event, phone)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                              onClick={(event) => handleDeletePhone(event, phone)}
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
+                            <div className="flex items-center gap-1">
+                              {selectedPhone?.id === phone.id && (
+                                <div className="bg-primary rounded-full p-1">
+                                  <Check className="h-4 w-4 text-white" />
+                                </div>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                onClick={(event) => handleEditPhone(event, phone)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                onClick={(event) => handleDeletePhone(event, phone)}
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -1073,8 +1077,8 @@ function DepositContent() {
                     </div>
                   )}
 
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full rounded-2xl border-primary/30 text-primary"
                     onClick={() => {
                       if (!selectedPlatform || !selectedBetId || !selectedNetwork) {
@@ -1098,79 +1102,79 @@ function DepositContent() {
                 </div>
               )}
             </AppSection>
-        )}
+          )}
 
-        {step === 5 && (
+          {step === 5 && (
             <AppSection
               title="5. Montant et récapitulatif"
               subtitle={`Respectez les limites de ${selectedPlatform?.minimun_deposit?.toLocaleString() ?? 0} à ${selectedPlatform?.max_deposit?.toLocaleString() ?? 0} FCFA.`}
             >
               <div className="space-y-6">
-              <div className="space-y-3">
+                <div className="space-y-3">
                   <Label htmlFor="amount" className="font-medium">
                     {t("amount")} (FCFA)
                   </Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="1000"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder="1000"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
                     className="h-12 rounded-2xl text-lg"
-                />
-              </div>
+                  />
+                </div>
 
-              {selectedPlatform?.deposit_tuto_link && (
-                <Button
-                  type="button"
-                  variant="outline"
+                {selectedPlatform?.deposit_tuto_link && (
+                  <Button
+                    type="button"
+                    variant="outline"
                     className="w-full rounded-2xl"
                     onClick={() =>
                       window.open(selectedPlatform.deposit_tuto_link!, "_blank", "noopener,noreferrer")
                     }
                   >
                     Voir le tutoriel de dépôt
-                </Button>
-              )}
+                  </Button>
+                )}
 
                 <div className="space-y-2 rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("platform")}</span>
-                  <span className="font-medium">{selectedPlatform?.name}</span>
-                </div>
-                {selectedPlatform?.city && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ville</span>
-                    <span className="font-medium">{selectedPlatform.city}</span>
+                    <span className="text-muted-foreground">{t("platform")}</span>
+                    <span className="font-medium">{selectedPlatform?.name}</span>
                   </div>
-                )}
-                {selectedPlatform?.street && (
+                  {selectedPlatform?.city && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Ville</span>
+                      <span className="font-medium">{selectedPlatform.city}</span>
+                    </div>
+                  )}
+                  {selectedPlatform?.street && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Rue</span>
+                      <span className="font-medium">{selectedPlatform.street}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Rue</span>
-                    <span className="font-medium">{selectedPlatform.street}</span>
+                    <span className="text-muted-foreground">ID de pari</span>
+                    <span className="font-medium">{selectedBetId?.user_app_id}</span>
                   </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">ID de pari</span>
-                  <span className="font-medium">{selectedBetId?.user_app_id}</span>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("network")}</span>
+                    <span className="font-medium">{selectedNetwork?.public_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("phone")}</span>
+                    <span className="font-medium">{selectedPhone?.phone}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("network")}</span>
-                  <span className="font-medium">{selectedNetwork?.public_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t("phone")}</span>
-                  <span className="font-medium">{selectedPhone?.phone}</span>
-                </div>
-              </div>
 
-              {selectedNetwork?.deposit_message && selectedNetwork.deposit_message.trim() !== "" && (
+                {selectedNetwork?.deposit_message && selectedNetwork.deposit_message.trim() !== "" && (
                   <div className="rounded-2xl border border-blue-200/60 bg-blue-50 p-4 text-sm dark:border-blue-900 dark:bg-blue-950/30">
                     <p className="text-blue-900 dark:text-blue-100 whitespace-pre-line">
-                    {selectedNetwork.deposit_message}
-                  </p>
-                </div>
-              )}
+                      {selectedNetwork.deposit_message}
+                    </p>
+                  </div>
+                )}
               </div>
             </AppSection>
           )}
@@ -1358,9 +1362,9 @@ function DepositContent() {
             <div className="space-y-2">
               <Label>Code USSD à composer</Label>
               <div className="flex gap-2">
-                <Input 
-                  readOnly 
-                  value={moovUssdCode ?? ""} 
+                <Input
+                  readOnly
+                  value={moovUssdCode ?? ""}
                   className="font-mono text-base"
                 />
                 <Button type="button" onClick={handleCopyMoovCode}>
@@ -1452,8 +1456,8 @@ function DepositContent() {
             <Button
               variant="outline"
               onClick={() => {
-              setShowTransactionLinkDialog(false)
-              router.push("/dashboard")
+                setShowTransactionLinkDialog(false)
+                router.push("/dashboard")
               }}
               className="flex-1"
             >

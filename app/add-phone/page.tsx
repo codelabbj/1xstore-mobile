@@ -49,7 +49,9 @@ function AddPhoneContent() {
   const { data: networks, isLoading: loadingNetworks } = useQuery({
     queryKey: ["networks"],
     queryFn: async () => {
-      const response = await api.get<Network[]>("/mobcash/network")
+      const response = await api.get<Network[]>("/mobcash/network", {
+        params: { type: flow === "withdraw" ? "withdrawal" : "deposit" },
+      })
       return response.data.filter((n) => n.active_for_deposit)
     },
   })
@@ -113,7 +115,7 @@ function AddPhoneContent() {
     e.preventDefault()
 
     const digitsOnly = formatPhoneNumber(phone)
-    
+
     if (!phone || digitsOnly.length < 6) {
       toast.error("Veuillez saisir un numéro de téléphone valide")
       return
@@ -157,7 +159,7 @@ function AddPhoneContent() {
               <div>
                 <h3 className="font-bold text-base mb-1">Ajouter un ID de pari</h3>
                 <p className="text-sm text-muted-foreground">
-                  {preselectedNetworkId 
+                  {preselectedNetworkId
                     ? `Ajoutez un nouveau numéro pour ${networks?.find(n => n.id.toString() === preselectedNetworkId)?.public_name || 'le réseau sélectionné'}`
                     : "Enregistrez votre numéro pour effectuer vos transactions rapidement"
                   }
@@ -273,9 +275,9 @@ function AddPhoneContent() {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full mobile-button bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-md hover:shadow-lg" 
+              <Button
+                type="submit"
+                className="w-full mobile-button bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-md hover:shadow-lg"
                 disabled={addPhoneMutation.isPending}
               >
                 {addPhoneMutation.isPending ? (

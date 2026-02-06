@@ -49,7 +49,9 @@ function AddBetIdContent() {
   const { data: platforms, isLoading: loadingPlatforms } = useQuery({
     queryKey: ["platforms"],
     queryFn: async () => {
-      const response = await api.get<Platform[]>("/mobcash/plateform")
+      const response = await api.get<Platform[]>("/mobcash/plateform", {
+        params: { type: flow === "withdraw" ? "withdrawal" : "deposit" },
+      })
       return response.data.filter((p) => p.enable)
     },
   })
@@ -87,11 +89,11 @@ function AddBetIdContent() {
       setShowConfirmModal(true)
     },
     onError: (error: any) => {
-      const errorData = 
-        error?.originalError?.response?.data || 
-        error?.response?.data || 
+      const errorData =
+        error?.originalError?.response?.data ||
+        error?.response?.data ||
         error?.data
-      
+
       // Handle field-specific errors (400 status)
       if (error?.originalError?.response?.status === 400) {
         const errorMsg = errorData?.details || errorData?.detail || errorData?.error || errorData?.message || error.message
@@ -138,11 +140,11 @@ function AddBetIdContent() {
       router.push(returnPath)
     },
     onError: (error: any) => {
-      const errorData = 
-        error?.originalError?.response?.data || 
-        error?.response?.data || 
+      const errorData =
+        error?.originalError?.response?.data ||
+        error?.response?.data ||
         error?.data
-      
+
       // Handle field-specific errors (400 status)
       if (error?.originalError?.response?.status === 400) {
         const errorMsg = errorData?.details || errorData?.detail || errorData?.error || errorData?.message || error.message
@@ -363,19 +365,19 @@ function AddBetIdContent() {
             </div>
           )}
           <div className="flex gap-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowConfirmModal(false)
                 setPendingBetId(null)
                 setSearchResult(null)
-              }} 
+              }}
               className="flex-1"
             >
               Annuler
             </Button>
-            <Button 
-              onClick={handleConfirmAdd} 
+            <Button
+              onClick={handleConfirmAdd}
               disabled={addBetIdMutation.isPending}
               className="flex-1"
             >

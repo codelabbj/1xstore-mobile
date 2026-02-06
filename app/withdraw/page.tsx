@@ -105,19 +105,19 @@ function WithdrawContent() {
 
   type WithdrawReturnData =
     | {
-        action: "addBet"
-        platformId: string
-        user_app_id: string
-        targetStep?: number
-      }
+      action: "addBet"
+      platformId: string
+      user_app_id: string
+      targetStep?: number
+    }
     | {
-        action: "addPhone"
-        platformId: string
-        betUserAppId: string
-        networkId: number
-        phone: string
-        targetStep?: number
-      }
+      action: "addPhone"
+      platformId: string
+      betUserAppId: string
+      networkId: number
+      phone: string
+      targetStep?: number
+    }
 
   type SearchUserResponse = {
     UserId: number
@@ -167,7 +167,9 @@ function WithdrawContent() {
   const { data: platforms, isLoading: loadingPlatforms } = useQuery({
     queryKey: ["platforms"],
     queryFn: async () => {
-      const response = await api.get<Platform[]>("/mobcash/plateform")
+      const response = await api.get<Platform[]>("/mobcash/plateform", {
+        params: { type: "withdrawal" },
+      })
       return response.data.filter((p) => p.enable)
     },
   })
@@ -189,7 +191,9 @@ function WithdrawContent() {
   const { data: networks, isLoading: loadingNetworks } = useQuery({
     queryKey: ["networks"],
     queryFn: async () => {
-      const response = await api.get<NetworkType[]>("/mobcash/network")
+      const response = await api.get<NetworkType[]>("/mobcash/network", {
+        params: { type: "withdrawal" },
+      })
       return response.data.filter((n) => n.active_for_with)
     },
     enabled: !!selectedPlatform,
@@ -546,7 +550,7 @@ function WithdrawContent() {
         withdriwal_code: withdrawalCode,
         source: "web",
       }
-      
+
       // Add city and street if available from platform
       if (selectedPlatform!.city) {
         payload.city = selectedPlatform!.city
@@ -554,7 +558,7 @@ function WithdrawContent() {
       if (selectedPlatform!.street) {
         payload.street = selectedPlatform!.street
       }
-      
+
       const response = await api.post("/mobcash/transaction-withdrawal", payload)
       return response.data
     },
@@ -564,19 +568,19 @@ function WithdrawContent() {
     },
     onError: (error: any) => {
       // Check for rate limit error (error_time_message) in multiple possible locations
-      const errorData = 
-        error?.originalError?.response?.data || 
-        error?.response?.data || 
+      const errorData =
+        error?.originalError?.response?.data ||
+        error?.response?.data ||
         error?.data
-      
-      const timeMessage = 
+
+      const timeMessage =
         errorData?.error_time_message ||
         error?.originalError?.response?.data?.error_time_message ||
         error?.response?.data?.error_time_message
-      
+
       if (timeMessage) {
-        const message = Array.isArray(timeMessage) 
-          ? timeMessage[0] 
+        const message = Array.isArray(timeMessage)
+          ? timeMessage[0]
           : timeMessage
         toast.error(`Trop de tentatives. Veuillez réessayer dans ${message}`)
       } else {
@@ -1082,7 +1086,7 @@ function WithdrawContent() {
             </AppSection>
           )}
 
-          
+
         </div>
       </AppShell>
 

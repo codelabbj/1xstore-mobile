@@ -11,7 +11,7 @@ type AppSectionProps = {
   action?: ReactNode
   children: ReactNode
   className?: string
-  variant?: 'highlight' | 'default'
+  variant?: 'highlight' | 'default' | 'surface'
 }
 
 export function AppSection({
@@ -25,9 +25,14 @@ export function AppSection({
   variant = 'default',
 }: AppSectionProps) {
   const isHighlight = variant === 'highlight'
+  const isSurface = variant === 'surface'
 
   return (
-    <section className={cn("space-y-4", isHighlight && "rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 p-6 dark:from-primary/20 dark:to-primary/10")}>
+    <section className={cn(
+      "space-y-4",
+      isHighlight && "rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 p-6 dark:from-primary/20 dark:to-primary/10",
+      isSurface && "rounded-3xl bg-slate-50 p-6 dark:bg-white/5 border border-slate-100 dark:border-white/10"
+    )}>
       {(title || subtitle || badge) && (
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
