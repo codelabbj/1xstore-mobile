@@ -36,6 +36,7 @@ import api from "@/lib/api"
 import type { Transaction } from "@/lib/types"
 import { formatDate } from "@/lib/utils"
 import { useSettings } from "@/hooks/use-settings"
+import toast from "react-hot-toast"
 
 function DashboardContent() {
   const { t } = useTranslation()
@@ -97,8 +98,8 @@ function DashboardContent() {
   type AdvertisementResponse =
     | AdvertisementEntry[]
     | {
-        results?: AdvertisementEntry[]
-      }
+      results?: AdvertisementEntry[]
+    }
     | null
     | undefined
 
@@ -210,36 +211,36 @@ function DashboardContent() {
 
   const headerActions = (
     <div className="flex items-center gap-2">
-            <button
+      <button
         className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/10 bg-white/80 text-foreground shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl dark:border-white/10 dark:bg-white/10"
-              onClick={() => router.push("/notifications")}
+        onClick={() => router.push("/notifications")}
         aria-label="Ouvrir les notifications"
-            >
-              <Bell className="h-5 w-5" />
-              {notificationData && notificationData > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="absolute -right-1 -top-1 h-5 min-w-5 rounded-full p-0 text-[10px] leading-none"
-                >
-                  {notificationData > 99 ? '99+' : notificationData}
-                </Badge>
-              )}
-            </button>
-            <button 
+      >
+        <Bell className="h-5 w-5" />
+        {notificationData && notificationData > 0 && (
+          <Badge
+            variant="destructive"
+            className="absolute -right-1 -top-1 h-5 min-w-5 rounded-full p-0 text-[10px] leading-none"
+          >
+            {notificationData > 99 ? '99+' : notificationData}
+          </Badge>
+        )}
+      </button>
+      <button
         className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/10 bg-white/80 text-foreground shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl dark:border-white/10 dark:bg-white/10"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         aria-label="Changer le thème"
-            >
-              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </button>
-            <button 
+      >
+        {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+      </button>
+      <button
         className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-blue-600 text-white shadow-lg transition hover:scale-[1.03]"
-              onClick={() => router.push("/profile")}
+        onClick={() => router.push("/profile")}
         aria-label="Profil"
-            >
-              <User className="h-5 w-5" />
-            </button>
-          </div>
+      >
+        <User className="h-5 w-5" />
+      </button>
+    </div>
   )
 
   const bottomDock = (
@@ -353,7 +354,7 @@ function DashboardContent() {
       floatingSlot={bottomDock}
     >
       <div className="space-y-6">
-        
+
 
         {referralBonusEnabled && user && user.bonus_available > 0 && (
           <AppSection title="Bonus disponible" subtitle="Transformez vos gains en actions rapides.">
@@ -479,7 +480,7 @@ function DashboardContent() {
             </button>
             <button
               className="mobile-pressable flex flex-col items-center gap-2 rounded-2xl border border-primary/20 bg-white/90 py-4 px-2 text-primary shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-primary/40 dark:bg-primary/20 dark:text-white"
-              onClick={() => router.push("/coupon")}
+              onClick={handleCouponClick}
             >
               <div className="rounded-full bg-primary/15 p-2.5">
                 <Ticket className="h-5 w-5" />
@@ -502,7 +503,7 @@ function DashboardContent() {
 
         <AppSection
           title="Transactions récentes"
-        
+
           action={
             <Button
               variant="ghost"
@@ -529,9 +530,8 @@ function DashboardContent() {
                 <div key={transaction.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                   <div className="flex items-start gap-3">
                     <div
-                      className={`shrink-0 rounded-2xl p-2.5 ${
-                        transaction.type_trans === "deposit" ? "bg-emerald-500/10" : "bg-orange-500/10"
-                      }`}
+                      className={`shrink-0 rounded-2xl p-2.5 ${transaction.type_trans === "deposit" ? "bg-emerald-500/10" : "bg-orange-500/10"
+                        }`}
                     >
                       {transaction.type_trans === "deposit" ? (
                         <Download className="h-5 w-5 text-emerald-600" />

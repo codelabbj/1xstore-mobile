@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Copy, Check, Ticket, Share2, Sparkles } from "lucide-react"
+import { ArrowLeft, Copy, Check, Ticket, Share2, LockKeyhole, Download } from "lucide-react"
 import toast from "react-hot-toast"
 import { Button } from "@/components/ui/button"
 import { AuthGuard } from "@/components/auth-guard"
@@ -12,13 +12,26 @@ import { AppShell } from "@/app/_components/AppShell"
 import { AppSection } from "@/app/_components/AppSection"
 import { Badge } from "@/components/ui/badge"
 import api from "@/lib/api"
-import type { Coupon, PaginatedResponse } from "@/lib/types"
+import type { Coupon, PaginatedResponse, Transaction } from "@/lib/types"
 import { formatDate } from "@/lib/utils"
 
 function CouponContent() {
   const { t } = useTranslation()
   const router = useRouter()
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
+
+  // Check if user has at least one successful deposit
+  const { data: depositCheck, isLoading: depositCheckLoading } = useQuery({
+    queryKey: ["deposit-check"],
+    queryFn: async () => {
+      const response = await api.get<{ count: number; results: Transaction[] }>("/mobcash/transaction-history", {
+        params: { type_trans: "deposit", status: "accept", page: 1, page_size: 1 },
+      })
+      return response.data
+    },
+  })
+
+  const hasSuccessfulDeposit = (depositCheck?.count ?? 0) > 0
 
   const { data: couponData, isLoading: couponLoading } = useQuery<PaginatedResponse<Coupon>>({
     queryKey: ["coupons"],
@@ -66,6 +79,63 @@ function CouponContent() {
     </div>
   )
 
+  // --- Deposit gate ---
+  if (depositCheckLoading) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent mb-2" />
+          <p className="text-sm text-muted-foreground">Vérification...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasSuccessfulDeposit) {
+    return (
+      <AppShell
+        title="Mes Coupons"
+        subtitle="Codes promo actifs et partageables"
+        status="Accès restreint"
+        actions={
+          <button
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/10 bg-white/80 text-foreground shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl dark:border-white/10 dark:bg-white/10"
+            onClick={() => router.push("/dashboard")}
+            aria-label="Retour"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        }
+      >
+        <AppSection
+          variant="highlight"
+          title="Accès réservé"
+          subtitle="Effectuez un dépôt pour débloquer les coupons"
+        >
+          <div className="flex flex-col items-center gap-5 py-4 text-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/50 shadow-inner dark:bg-white/10">
+              <LockKeyhole className="h-10 w-10 text-primary/70" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-semibold text-foreground">Dépôt requis</p>
+              <p className="text-sm text-muted-foreground">
+                Vous devez effectuer au moins un dépôt accepté avant d'accéder à vos coupons.
+              </p>
+            </div>
+            <Button
+              className="h-12 w-full rounded-xl bg-gradient-to-r from-primary to-blue-500 hover:opacity-90"
+              onClick={() => router.push("/deposit")}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Faire un dépôt
+            </Button>
+          </div>
+        </AppSection>
+      </AppShell>
+    )
+  }
+  // --- End deposit gate ---
+
   return (
     <AppShell
       title="Mes Coupons"
@@ -79,12 +149,12 @@ function CouponContent() {
           variant="highlight"
           title="Espace coupons"
           subtitle="Partagez vos codes et gagnez des bonus"
-          // badge={
-          //   <Badge className="gap-2 bg-white/20 text-white">
-          //     <Sparkles className="h-3.5 w-3.5" />
-          //     Parrainage
-          //   </Badge>
-          // }
+        // badge={
+        //   <Badge className="gap-2 bg-white/20 text-white">
+        //     <Sparkles className="h-3.5 w-3.5" />
+        //     Parrainage
+        //   </Badge>
+        // }
         >
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-2xl border border-white/40 bg-white/40 px-4 py-4 backdrop-blur dark:border-white/10 dark:bg-white/10">
