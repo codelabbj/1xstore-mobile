@@ -47,7 +47,7 @@ function AddPhoneContent() {
 
   // Fetch networks
   const { data: networks, isLoading: loadingNetworks } = useQuery({
-    queryKey: ["networks"],
+    queryKey: ["networks", flow],
     queryFn: async () => {
       const response = await api.get<Network[]>("/mobcash/network", {
         params: { type: flow === "withdraw" ? "withdrawal" : "deposit" },

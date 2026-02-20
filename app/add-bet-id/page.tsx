@@ -47,7 +47,7 @@ function AddBetIdContent() {
 
   // Fetch platforms
   const { data: platforms, isLoading: loadingPlatforms } = useQuery({
-    queryKey: ["platforms"],
+    queryKey: ["platforms", flow],
     queryFn: async () => {
       const response = await api.get<Platform[]>("/mobcash/plateform", {
         params: { type: flow === "withdraw" ? "withdrawal" : "deposit" },

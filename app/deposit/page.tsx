@@ -179,7 +179,7 @@ function DepositContent() {
 
   // Fetch platforms
   const { data: platforms, isLoading: loadingPlatforms } = useQuery({
-    queryKey: ["platforms"],
+    queryKey: ["platforms", "deposit"],
     queryFn: async () => {
       const response = await api.get<Platform[]>("/mobcash/plateform", {
         params: { type: "deposit" },
@@ -190,7 +190,7 @@ function DepositContent() {
 
   // Fetch bet IDs
   const { data: betIds, isLoading: loadingBetIds } = useQuery({
-    queryKey: ["bet-ids", selectedPlatform?.id],
+    queryKey: ["bet-ids", "deposit", selectedPlatform?.id],
     queryFn: async () => {
       if (!selectedPlatform) return []
       const response = await api.get<UserAppId[]>("/mobcash/user-app-id", {
@@ -203,7 +203,7 @@ function DepositContent() {
 
   // Fetch networks
   const { data: networks, isLoading: loadingNetworks } = useQuery({
-    queryKey: ["networks"],
+    queryKey: ["networks", "deposit"],
     queryFn: async () => {
       const response = await api.get<NetworkType[]>("/mobcash/network", {
         params: { type: "deposit" },
@@ -218,7 +218,7 @@ function DepositContent() {
 
   // Fetch phones filtered by selected network
   const { data: phones, isLoading: loadingPhones } = useQuery({
-    queryKey: ["phones", selectedNetworkKey],
+    queryKey: ["phones", "deposit", selectedNetworkKey],
     queryFn: async () => {
       if (!selectedNetworkKey) return []
       const response = await api.get<UserPhone[]>("/mobcash/user-phone/", {
