@@ -7,7 +7,7 @@ export class MobileBackButtonHandler {
   private eventListeners: Array<{ element: EventTarget; event: string; handler: EventListener }> = []
   private capacitorListener?: any
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): MobileBackButtonHandler {
     if (!MobileBackButtonHandler.instance) {
@@ -28,9 +28,11 @@ export class MobileBackButtonHandler {
 
     // Use Capacitor App plugin for native back button handling
     if (typeof window !== 'undefined' && (window as any).Capacitor) {
-      this.capacitorListener = App.addListener('backButton', ({ canGoBack }) => {
+      App.addListener('backButton', ({ canGoBack }) => {
         // Always prevent default exit behavior
         handleBackButton()
+      }).then(handle => {
+        this.capacitorListener = handle
       })
     }
 

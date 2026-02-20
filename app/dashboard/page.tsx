@@ -207,6 +207,25 @@ function DashboardContent() {
     )
   }
 
+  const { data: depositCheck } = useQuery({
+    queryKey: ["deposit-check-brief"],
+    queryFn: async () => {
+      const response = await api.get<{ count: number }>("/mobcash/transaction-history", {
+        params: { type_trans: "deposit", status: "accept", page: 1, page_size: 1 },
+      })
+      return response.data
+    },
+    enabled: !!user,
+  })
+
+  const handleCouponClick = () => {
+    if ((depositCheck?.count ?? 0) > 0) {
+      router.push("/coupon")
+    } else {
+      toast.error("Veuillez effectuer un dépôt réussi pour accéder aux coupons.")
+    }
+  }
+
   const shellStatus = isLoading ? "Synchronisation en cours..." : "Flux sécurisé"
 
   const headerActions = (
