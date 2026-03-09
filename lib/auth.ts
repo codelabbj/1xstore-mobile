@@ -6,6 +6,7 @@ export interface User {
   phone: string
   bonus_available: number
   referral_code: string
+  referrer_code: string
 }
 
 export interface AuthResponse {

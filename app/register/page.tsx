@@ -24,7 +24,7 @@ const registerSchema = z.object({
   phone: z.string().min(10, "Numéro de téléphone invalide"),
   password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
   re_password: z.string().min(6, "Veuillez confirmer votre mot de passe"),
-  referral_code: z.string().optional(),
+  referrer_code: z.string().optional(),
 })
 
 export default function RegisterPage() {
@@ -55,9 +55,9 @@ export default function RegisterPage() {
         re_password: data.re_password,
       }
 
-      // Only include referral_code if referral_bonus is enabled
-      if (referralBonusEnabled && data.referral_code) {
-        payload.referral_code = data.referral_code
+      // Only include referrer_code if referral_bonus is enabled
+      if (referralBonusEnabled && data.referrer_code) {
+        payload.referrer_code = data.referrer_code
       }
 
       await api.post("/auth/registration", payload)
@@ -239,19 +239,19 @@ export default function RegisterPage() {
             {/* Referral Code */}
             {referralBonusEnabled && (
               <div className="space-y-2">
-                <Label htmlFor="referral_code" className="text-sm font-medium">Code de parrainage (optionnel)</Label>
+                <Label htmlFor="referrer_code" className="text-sm font-medium">Code de parrainage (optionnel)</Label>
                 <div className="relative">
                   <Gift className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    id="referral_code"
+                    id="referrer_code"
                     type="text"
                     placeholder="Entrez un code de parrainage"
                     className="h-12 rounded-2xl pl-10"
-                    {...register("referral_code")}
+                    {...register("referrer_code")}
                     disabled={isLoading || settingsLoading}
                   />
                 </div>
-                {errors.referral_code && <p className="text-xs text-destructive">{errors.referral_code?.message}</p>}
+                {errors.referrer_code && <p className="text-xs text-destructive">{errors.referrer_code?.message}</p>}
               </div>
             )}
 
