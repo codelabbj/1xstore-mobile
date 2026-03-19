@@ -52,18 +52,16 @@ function DashboardContent() {
   const { data: transactions, isLoading } = useQuery({
     queryKey: ["recent-transactions"],
     queryFn: async () => {
-      const response = await api.get<{
-        count: number
-        results: Transaction[]
-      }>("/mobcash/transaction-history", {
-        params: {
-          page: 1,
-          page_size: 5,
-        },
-      })
+      const response = await api.get<{ count: number; results: Transaction[] }>(
+        "/mobcash/transaction-history",
+        { params: { page: 1, page_size: 5 } }
+      )
       return response.data.results
     },
-    refetchInterval: 120000, // Refresh every 2 minutes
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
+    staleTime: 0,        
   })
 
   // Fetch notification count for badge
@@ -194,6 +192,11 @@ function DashboardContent() {
         return <Badge className="bg-primary">{t("accept")}</Badge>
       case "reject":
         return <Badge variant="destructive">{t("reject")}</Badge>
+      case "cancel":
+      case "annuler":  // ✅ l'API retourne parfois "annuler" en français
+        return <Badge variant="outline">Annulé</Badge>
+      case "timeout":
+        return <Badge variant="outline">Expiré</Badge>
       default:
         return <Badge variant="secondary">{t("pending")}</Badge>
     }
