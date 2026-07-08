@@ -95,17 +95,6 @@ export default function RootLayout({
           <MobileBackButtonHandler />
           {/* <UpdateCheck /> */}
           {children}
-          <footer className="px-4 py-6 text-center text-xs text-muted-foreground">
-            Développé par{" "}
-            <a
-              href="https://codelab.bj"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Code Lab
-            </a>
-          </footer>
         </Providers>
         <Analytics />
       </body>
