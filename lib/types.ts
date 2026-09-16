@@ -116,4 +116,6 @@ export interface PaginatedResponse<T> {
   next: string | null
   previous: string | null
   results: T[]
+  has_recent_deposit?: boolean
+  requires_recent_deposit?: boolean
 }

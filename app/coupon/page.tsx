@@ -179,11 +179,21 @@ function CouponContent() {
               Chargement...
             </div>
           ) : !couponData?.results || couponData.results.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 px-4 py-10 text-center">
-              <Ticket className="mx-auto mb-3 h-12 w-12 text-primary/40" />
-              <p className="text-sm font-medium text-muted-foreground">Aucun coupon pour le moment</p>
-              <p className="mt-1 text-xs text-muted-foreground">Vos coupons apparaîtront ici</p>
-            </div>
+            couponData?.requires_recent_deposit ? (
+              <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 px-4 py-10 text-center">
+                <LockKeyhole className="mx-auto mb-3 h-12 w-12 text-primary/40" />
+                <p className="text-sm font-medium text-muted-foreground">Dépôt récent requis</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Vous devez effectuer un dépôt réussit dans les 24 dernières heures pour accéder aux coupons
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 px-4 py-10 text-center">
+                <Ticket className="mx-auto mb-3 h-12 w-12 text-primary/40" />
+                <p className="text-sm font-medium text-muted-foreground">Aucun coupon pour le moment</p>
+                <p className="mt-1 text-xs text-muted-foreground">Vos coupons apparaîtront ici</p>
+              </div>
+            )
           ) : (
             <div className="space-y-3">
               {couponData.results.map((coupon) => (
