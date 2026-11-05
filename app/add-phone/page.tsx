@@ -46,13 +46,16 @@ function AddPhoneContent() {
   const preselectedNetworkId = searchParams.get("network")
 
   // Fetch networks
+  const networkType = flow === "withdraw" ? "withdrawal" : "deposit"
   const { data: networks, isLoading: loadingNetworks } = useQuery({
-    queryKey: ["networks", flow],
+    queryKey: ["networks", networkType],
     queryFn: async () => {
       const response = await api.get<Network[]>("/mobcash/network", {
-        params: { type: flow === "withdraw" ? "withdrawal" : "deposit" },
+        params: { type: networkType },
       })
-      return response.data.filter((n) => n.active_for_deposit)
+      return response.data.filter((n) =>
+        networkType === "withdrawal" ? n.active_for_with : n.active_for_deposit
+      )
     },
   })
 
